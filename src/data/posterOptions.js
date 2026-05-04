@@ -1,0 +1,418 @@
+export const posterSizes = [
+  { value: '12 x 18 in', label: '12 x 18 in' },
+  { value: '18 x 24 in', label: '18 x 24 in' },
+  { value: '24 x 36 in', label: '24 x 36 in' },
+  { value: 'A2 poster', label: 'A2 poster' },
+];
+
+export function getPosterHeight(posterSize) {
+  switch (posterSize) {
+    case '12 x 18 in':
+    case '24 x 36 in':
+      return 1350; // ratio 1.5
+    case 'A2 poster':
+      return 1273; // ratio 1.414 (594/420)
+    case '18 x 24 in':
+    default:
+      return 1200; // ratio 1.333
+  }
+}
+
+export const typographyThemes = [
+  {
+    id: 'romantic-signature',
+    label: 'Romantic Signature',
+    settings: {
+      title: { size: 82, font: "'Brittany Signature', cursive", align: 'middle', yOffset: 0, transform: 'none' },
+      subtitle: { size: 14, font: "'Montserrat', sans-serif", align: 'middle', yOffset: 0, transform: 'uppercase' },
+      meta: { size: 10.5, font: "'Outfit', sans-serif", align: 'middle', yOffset: 0, transform: 'uppercase' },
+    }
+  },
+  {
+    id: 'modern-minimal',
+    label: 'Modern Minimal',
+    settings: {
+      title: { size: 48, font: "'Montserrat', sans-serif", align: 'start', yOffset: 20, transform: 'none' },
+      subtitle: { size: 16, font: "'Outfit', sans-serif", align: 'start', yOffset: 20, transform: 'uppercase' },
+      meta: { size: 11, font: "'Inter', sans-serif", align: 'start', yOffset: 10, transform: 'uppercase' },
+    }
+  },
+  {
+    id: 'vintage-explorer',
+    label: 'Vintage Explorer',
+    settings: {
+      title: { size: 54, font: "'Cinzel', serif", align: 'middle', yOffset: 0, transform: 'none' },
+      subtitle: { size: 13, font: "'Georgia', serif", align: 'middle', yOffset: 0, transform: 'uppercase' },
+      meta: { size: 11, font: "'Georgia', serif", align: 'middle', yOffset: 0, transform: 'uppercase' },
+    }
+  },
+  {
+    id: 'elegant-serif',
+    label: 'Elegant Serif',
+    settings: {
+      title: { size: 68, font: "'Playfair Display', serif", align: 'middle', yOffset: 10, transform: 'none' },
+      subtitle: { size: 15, font: "'Playfair Display', serif", align: 'middle', yOffset: 10, transform: 'uppercase' },
+      meta: { size: 11, font: "'Montserrat', sans-serif", align: 'middle', yOffset: 0, transform: 'uppercase' },
+    }
+  }
+];
+
+const serifPairing = {
+  heading: 'Georgia, "Times New Roman", serif',
+  body: 'Inter, Arial, sans-serif',
+};
+
+const modernPairing = {
+  heading: 'Inter, Arial, sans-serif',
+  body: 'Inter, Arial, sans-serif',
+};
+
+const displayPairing = {
+  heading: '"Trebuchet MS", Inter, Arial, sans-serif',
+  body: 'Inter, Arial, sans-serif',
+};
+
+export const posterThemes = {
+  'classic-black-gold': {
+    key: 'classic-black-gold',
+    label: 'Classic Black Gold',
+    background: '#080706',
+    primaryText: '#fff8e6',
+    secondaryText: '#d5c2a4',
+    starColor: '#fff8e6',
+    constellationLineColor: '#c99b5f',
+    borderColor: '#6f5635',
+    accentColor: '#c99b5f',
+    fontPairing: serifPairing,
+    sky: {
+      center: '#30251b',
+      mid: '#11100e',
+      edge: '#020202',
+      grid: 'rgba(255, 248, 230, 0.16)',
+      ring: '#c99b5f',
+    },
+  },
+  'deep-navy-white': {
+    key: 'deep-navy-white',
+    label: 'Deep Navy White',
+    background: '#f8fbff',
+    primaryText: '#112033',
+    secondaryText: '#526477',
+    starColor: '#ffffff',
+    constellationLineColor: '#ffffff',
+    borderColor: '#cfd9e5',
+    accentColor: '#102f59',
+    fontPairing: modernPairing,
+    sky: {
+      center: '#244c78',
+      mid: '#0d2442',
+      edge: '#061223',
+      grid: 'rgba(255, 255, 255, 0.18)',
+      ring: '#ffffff',
+    },
+  },
+  'minimal-white': {
+    key: 'minimal-white',
+    label: 'Minimal White',
+    background: '#ffffff',
+    primaryText: '#111111',
+    secondaryText: '#5d5d59',
+    starColor: '#111111',
+    constellationLineColor: '#111111',
+    borderColor: '#d7d4cc',
+    accentColor: '#111111',
+    fontPairing: modernPairing,
+    sky: {
+      center: '#ffffff',
+      mid: '#f7f7f5',
+      edge: '#e7e5e0',
+      grid: 'rgba(17, 17, 17, 0.14)',
+      ring: '#111111',
+    },
+  },
+  'galaxy-purple': {
+    key: 'galaxy-purple',
+    label: 'Galaxy Purple',
+    background: '#100b1f',
+    primaryText: '#ffffff',
+    secondaryText: '#cfc7ee',
+    starColor: '#ffffff',
+    constellationLineColor: '#73e0ff',
+    borderColor: '#4a3976',
+    accentColor: '#ea8dff',
+    fontPairing: displayPairing,
+    sky: {
+      center: '#37236e',
+      mid: '#171342',
+      edge: '#080616',
+      grid: 'rgba(255, 255, 255, 0.16)',
+      ring: '#ea8dff',
+      galaxyCore: '#ffffff',
+      galaxyMist: '#b153ff',
+    },
+  },
+  'vintage-beige': {
+    key: 'vintage-beige',
+    label: 'Vintage Beige',
+    background: '#efe2c7',
+    primaryText: '#382a1d',
+    secondaryText: '#7a6046',
+    starColor: '#4a3523',
+    constellationLineColor: '#9a6a3c',
+    borderColor: '#b88f62',
+    accentColor: '#8f5b2e',
+    fontPairing: serifPairing,
+    sky: {
+      center: '#f6ebd1',
+      mid: '#e2c99e',
+      edge: '#bf9763',
+      grid: 'rgba(74, 53, 35, 0.16)',
+      ring: '#8f5b2e',
+    },
+  },
+  'romantic-rose': {
+    key: 'romantic-rose',
+    label: 'Romantic Rose',
+    background: '#fff2f4',
+    primaryText: '#421d28',
+    secondaryText: '#8d5363',
+    starColor: '#fff7f8',
+    constellationLineColor: '#ffd1da',
+    borderColor: '#e3a3b0',
+    accentColor: '#b54d68',
+    fontPairing: serifPairing,
+    sky: {
+      center: '#8e3e59',
+      mid: '#5f2338',
+      edge: '#2f101e',
+      grid: 'rgba(255, 209, 218, 0.18)',
+      ring: '#f0a8b8',
+    },
+  },
+  'space-blueprint': {
+    key: 'space-blueprint',
+    label: 'Space Blueprint',
+    background: '#071a2e',
+    primaryText: '#e9f7ff',
+    secondaryText: '#9dc5df',
+    starColor: '#d9f4ff',
+    constellationLineColor: '#6bd8ff',
+    borderColor: '#2f7eab',
+    accentColor: '#6bd8ff',
+    fontPairing: modernPairing,
+    sky: {
+      center: '#123d62',
+      mid: '#0a2a45',
+      edge: '#04111f',
+      grid: 'rgba(107, 216, 255, 0.20)',
+      ring: '#6bd8ff',
+    },
+  },
+  'kids-colorful': {
+    key: 'kids-colorful',
+    label: 'Kids Colorful',
+    background: '#fff8df',
+    primaryText: '#263057',
+    secondaryText: '#697091',
+    starColor: '#fff8a6',
+    constellationLineColor: '#6cc4ff',
+    borderColor: '#ffb44f',
+    accentColor: '#ff6fae',
+    fontPairing: displayPairing,
+    sky: {
+      center: '#5a82ff',
+      mid: '#3152c6',
+      edge: '#17245c',
+      grid: 'rgba(255, 255, 255, 0.20)',
+      ring: '#ffb44f',
+    },
+  },
+  'dark-green-celestial': {
+    key: 'dark-green-celestial',
+    label: 'Dark Green Celestial',
+    background: '#071611',
+    primaryText: '#ecf8ed',
+    secondaryText: '#b6cdbc',
+    starColor: '#f4ffe2',
+    constellationLineColor: '#b9d77b',
+    borderColor: '#45664d',
+    accentColor: '#b9d77b',
+    fontPairing: serifPairing,
+    sky: {
+      center: '#1d4232',
+      mid: '#10291f',
+      edge: '#030c09',
+      grid: 'rgba(244, 255, 226, 0.15)',
+      ring: '#b9d77b',
+    },
+  },
+  'premium-marble': {
+    key: 'premium-marble',
+    label: 'Premium Marble',
+    background: '#f7f4ee',
+    primaryText: '#1f1f1d',
+    secondaryText: '#6c665f',
+    starColor: '#fdfaf2',
+    constellationLineColor: '#d8b36a',
+    borderColor: '#d5cec1',
+    accentColor: '#b99045',
+    fontPairing: serifPairing,
+    texture: 'marble',
+    sky: {
+      center: '#353535',
+      mid: '#171717',
+      edge: '#050505',
+      grid: 'rgba(253, 250, 242, 0.14)',
+      ring: '#b99045',
+    },
+  },
+};
+
+export const starMapShapes = {
+  circle: {
+    key: 'circle',
+    label: 'Circle',
+    kind: 'circle',
+    cx: 450,
+    cy: 424,
+    radius: 294,
+    bounds: { x: 150, y: 124, width: 600, height: 600 },
+  },
+  heart: {
+    key: 'heart',
+    label: 'Heart',
+    kind: 'heart',
+    cx: 450,
+    cy: 426,
+    radius: 286,
+    bounds: { x: 160, y: 145, width: 580, height: 580 },
+  },
+  arch: {
+    key: 'arch',
+    label: 'Arch',
+    kind: 'arch',
+    cx: 450,
+    cy: 436,
+    radius: 294,
+    bounds: { x: 180, y: 124, width: 540, height: 600 },
+  },
+  square: {
+    key: 'square',
+    label: 'Square',
+    kind: 'square',
+    cx: 450,
+    cy: 424,
+    radius: 292,
+    bounds: { x: 165, y: 139, width: 570, height: 570 },
+  },
+  'rounded-square': {
+    key: 'rounded-square',
+    label: 'Rounded Square',
+    kind: 'rounded-square',
+    cx: 450,
+    cy: 424,
+    radius: 292,
+    bounds: { x: 165, y: 139, width: 570, height: 570 },
+  },
+  hexagon: {
+    key: 'hexagon',
+    label: 'Hexagon',
+    kind: 'hexagon',
+    cx: 450,
+    cy: 424,
+    radius: 294,
+    bounds: { x: 176, y: 124, width: 548, height: 600 },
+  },
+  'crescent-moon': {
+    key: 'crescent-moon',
+    label: 'Crescent Moon',
+    kind: 'crescent-moon',
+    cx: 410,
+    cy: 424,
+    radius: 278,
+    bounds: { x: 172, y: 124, width: 420, height: 600 },
+  },
+  diamond: {
+    key: 'diamond',
+    label: 'Diamond',
+    kind: 'diamond',
+    cx: 450,
+    cy: 424,
+    radius: 292,
+    bounds: { x: 150, y: 124, width: 600, height: 600 },
+  },
+  'window-frame': {
+    key: 'window-frame',
+    label: 'Window Frame',
+    kind: 'window-frame',
+    cx: 450,
+    cy: 436,
+    radius: 294,
+    bounds: { x: 180, y: 124, width: 540, height: 600 },
+    hasFrame: true,
+  },
+  'full-poster-background': {
+    key: 'full-poster-background',
+    label: 'Full Poster Background',
+    kind: 'full-poster-background',
+    cx: 450,
+    cy: 600,
+    radius: 650,
+    bounds: { x: 0, y: 0, width: 900, height: 1200 },
+    isFullBackground: true,
+  },
+  oval: {
+    key: 'oval',
+    label: 'Oval',
+    kind: 'oval',
+    cx: 450,
+    cy: 424,
+    radius: 286,
+    bounds: { x: 130, y: 174, width: 640, height: 500 },
+  },
+  'double-circle': {
+    key: 'double-circle',
+    label: 'Double Circle',
+    kind: 'double-circle',
+    cx: 450,
+    cy: 424,
+    radius: 286,
+    bounds: { x: 150, y: 124, width: 600, height: 600 },
+  },
+  'polaroid-frame': {
+    key: 'polaroid-frame',
+    label: 'Polaroid Frame',
+    kind: 'polaroid-frame',
+    cx: 450,
+    cy: 390,
+    radius: 242,
+    bounds: { x: 210, y: 150, width: 480, height: 480 },
+  },
+  'planet-ring-frame': {
+    key: 'planet-ring-frame',
+    label: 'Planet Ring Frame',
+    kind: 'planet-ring-frame',
+    cx: 450,
+    cy: 424,
+    radius: 280,
+    bounds: { x: 150, y: 124, width: 600, height: 600 },
+  },
+  'badge-seal': {
+    key: 'badge-seal',
+    label: 'Badge Seal',
+    kind: 'badge-seal',
+    cx: 450,
+    cy: 424,
+    radius: 282,
+    bounds: { x: 150, y: 124, width: 600, height: 600 },
+  },
+  'telescope-view': {
+    key: 'telescope-view',
+    label: 'Telescope View',
+    kind: 'telescope-view',
+    cx: 450,
+    cy: 424,
+    radius: 278,
+    bounds: { x: 162, y: 136, width: 576, height: 576 },
+  },
+};

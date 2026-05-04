@@ -1,0 +1,77 @@
+[
+  {
+    "name": "Ursa Major",
+    "label": "Ursa Major",
+    "lines": [["Dubhe", "Merak"], ["Merak", "Phecda"], ["Phecda", "Megrez"], ["Megrez", "Alioth"], ["Alioth", "Mizar"], ["Mizar", "Alkaid"], ["Megrez", "Dubhe"]]
+  },
+  {
+    "name": "Cassiopeia",
+    "label": "Cassiopeia",
+    "lines": [["Caph", "Schedar"], ["Schedar", "Gamma Cassiopeiae"], ["Gamma Cassiopeiae", "Ruchbah"], ["Ruchbah", "Segin"]]
+  },
+  {
+    "name": "Orion",
+    "label": "Orion",
+    "lines": [["Betelgeuse", "Bellatrix"], ["Bellatrix", "Mintaka"], ["Mintaka", "Alnilam"], ["Alnilam", "Alnitak"], ["Alnitak", "Saiph"], ["Saiph", "Rigel"], ["Rigel", "Mintaka"], ["Betelgeuse", "Alnitak"]]
+  },
+  {
+    "name": "Cygnus",
+    "label": "Cygnus",
+    "lines": [["Deneb", "Sadr"], ["Sadr", "Gienah"], ["Sadr", "Delta Cygni"], ["Sadr", "Albireo"]]
+  },
+  {
+    "name": "Lyra",
+    "label": "Lyra",
+    "lines": [["Vega", "Sheliak"], ["Sheliak", "Sulafat"], ["Sulafat", "Delta Lyrae"], ["Delta Lyrae", "Vega"]]
+  },
+  {
+    "name": "Aquila",
+    "label": "Aquila",
+    "lines": [["Tarazed", "Altair"], ["Altair", "Alshain"], ["Altair", "Delta Aquilae"], ["Delta Aquilae", "Lambda Aquilae"]]
+  },
+  {
+    "name": "Leo",
+    "label": "Leo",
+    "lines": [["Regulus", "Algieba"], ["Algieba", "Zosma"], ["Zosma", "Denebola"], ["Regulus", "Denebola"]]
+  },
+  {
+    "name": "Gemini",
+    "label": "Gemini",
+    "lines": [["Castor", "Pollux"], ["Pollux", "Wasat"], ["Wasat", "Alhena"], ["Castor", "Mebsuta"]]
+  },
+  {
+    "name": "Taurus",
+    "label": "Taurus",
+    "lines": [["Elnath", "Aldebaran"], ["Aldebaran", "Alcyone"], ["Aldebaran", "Zeta Tauri"]]
+  },
+  {
+    "name": "Scorpius",
+    "label": "Scorpius",
+    "lines": [["Dschubba", "Antares"], ["Antares", "Shaula"], ["Shaula", "Sargas"], ["Antares", "Epsilon Scorpii"]]
+  },
+  {
+    "name": "Crux",
+    "label": "Crux",
+    "lines": [["Acrux", "Gacrux"], ["Mimosa", "Delta Crucis"]]
+  },
+  {
+    "name": "Pegasus",
+    "label": "Pegasus",
+    "lines": [["Alpheratz", "Scheat"], ["Scheat", "Markab"], ["Markab", "Algenib"], ["Algenib", "Alpheratz"], ["Markab", "Enif"]]
+  },
+  {
+    "name": "Andromeda",
+    "label": "Andromeda",
+    "lines": [["Alpheratz", "Mirach"], ["Mirach", "Almach"]]
+  },
+  {
+    "name": "Bootes",
+    "label": "Bootes",
+    "lines": [["Arcturus", "Izar"], ["Izar", "Nekkar"], ["Arcturus", "Muphrid"]]
+  },
+  {
+    "name": "Summer Triangle",
+    "label": "Summer Triangle",
+    "lines": [["Vega", "Deneb"], ["Deneb", "Altair"], ["Altair", "Vega"]]
+  }
+]
