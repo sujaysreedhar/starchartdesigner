@@ -83,6 +83,25 @@ export function downloadLaserCutSvg(svgElement, poster) {
 }
 
 function buildLaserCutSvg(svgElement) {
+  // ── Step 0: Capture computed styles from the LIVE DOM ────────────────────
+  // The live SVG has CSS applied via the <style> block, so getComputedStyle
+  // returns the actual rendered font-family, font-size, etc.
+  const liveTextEls = svgElement.querySelectorAll('text, tspan');
+  const computedStyles = [];
+  for (const el of liveTextEls) {
+    const cs = window.getComputedStyle(el);
+    computedStyles.push({
+      fontFamily: cs.fontFamily,
+      fontSize: cs.fontSize,
+      fontWeight: cs.fontWeight,
+      fontStyle: cs.fontStyle,
+      letterSpacing: cs.letterSpacing,
+      textTransform: cs.textTransform,
+      textAnchor: el.getAttribute('text-anchor') || '',
+    });
+  }
+
+  // ── Step 1: Clone ────────────────────────────────────────────────────────
   const clone = svgElement.cloneNode(true);
   const { viewBox } = getSvgMetrics(svgElement);
 
@@ -94,23 +113,59 @@ function buildLaserCutSvg(svgElement) {
   clone.removeAttribute('class');
   clone.removeAttribute('style');
 
-  // ── Step 1: Strip gradient / filter / pattern defs ───────────────────────
+  // ── Step 2: Inline computed font styles onto cloned text elements ────────
+  const clonedTextEls = clone.querySelectorAll('text, tspan');
+  for (let i = 0; i < clonedTextEls.length && i < computedStyles.length; i++) {
+    const el = clonedTextEls[i];
+    const s = computedStyles[i];
+
+    el.setAttribute('font-family', s.fontFamily);
+    el.setAttribute('font-size', s.fontSize);
+    el.setAttribute('font-weight', s.fontWeight);
+    if (s.fontStyle && s.fontStyle !== 'normal') {
+      el.setAttribute('font-style', s.fontStyle);
+    }
+    if (s.letterSpacing && s.letterSpacing !== 'normal' && s.letterSpacing !== '0px') {
+      el.setAttribute('letter-spacing', s.letterSpacing);
+    }
+    if (s.textAnchor) {
+      el.setAttribute('text-anchor', s.textAnchor);
+    }
+
+    // SVG standalone viewers don't support CSS text-transform,
+    // so apply it directly to the text content.
+    if (s.textTransform && s.textTransform !== 'none') {
+      for (const node of el.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          if (s.textTransform === 'uppercase') {
+            node.textContent = node.textContent.toUpperCase();
+          } else if (s.textTransform === 'lowercase') {
+            node.textContent = node.textContent.toLowerCase();
+          } else if (s.textTransform === 'capitalize') {
+            node.textContent = node.textContent.replace(/\b\w/g, (c) => c.toUpperCase());
+          }
+        }
+      }
+    }
+  }
+
+  // ── Step 3: Strip gradient / filter / pattern defs ───────────────────────
   for (const el of clone.querySelectorAll(
     'defs > radialGradient, defs > linearGradient, defs > filter, defs > pattern',
   )) {
     el.remove();
   }
 
-  // ── Step 2: Blank the <style> block so CSS classes can't override attrs ──
+  // ── Step 4: Blank the <style> block (styles are now inlined) ─────────────
   const styleEl = clone.querySelector('style');
   if (styleEl) {
-    styleEl.textContent = '/* laser cut */';
+    styleEl.textContent = '/* laser cut — styles inlined */';
   }
 
-  // ── Step 3: Flat querySelectorAll pass — hits every element reliably ──────
+  // ── Step 5: Apply laser-cut visual treatment ─────────────────────────────
   applyLaserStyles(clone);
 
-  // ── Step 4: White background rect for preview, after defs ────────────────
+  // ── Step 6: White background rect for preview ────────────────────────────
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
   bg.setAttribute('x', '0');
   bg.setAttribute('y', '0');
@@ -127,7 +182,7 @@ function buildLaserCutSvg(svgElement) {
 
 /**
  * Convert every visual element to stroke-only black using a flat
- * querySelectorAll pass — no recursive early-return edge cases.
+ * querySelectorAll pass. Text elements keep their inlined font attributes.
  */
 function applyLaserStyles(svgRoot) {
   const GEOMETRY = new Set(['rect', 'circle', 'ellipse', 'line', 'polyline', 'polygon', 'path']);
@@ -137,7 +192,7 @@ function applyLaserStyles(svgRoot) {
     const tag = el.tagName?.toLowerCase() ?? '';
     if (SKIP.has(tag)) continue;
 
-    // Text → black fill, no stroke (engrave layer)
+    // Text → black fill, preserve inlined font attributes
     if (tag === 'text' || tag === 'tspan') {
       el.setAttribute('fill', '#000000');
       el.removeAttribute('stroke');
@@ -150,7 +205,7 @@ function applyLaserStyles(svgRoot) {
       continue;
     }
 
-    // Group → strip all visual attrs, keep structural (id, clip-path, transform)
+    // Group → strip visual attrs, keep structural (id, clip-path, transform)
     if (tag === 'g') {
       el.removeAttribute('fill');
       el.removeAttribute('stroke');
@@ -191,6 +246,21 @@ function serializeSvg(svgElement, width, height) {
 }
 
 function makeExportSvg(svgElement, width, height) {
+  // Capture computed text styles from the live DOM before cloning
+  const liveTextEls = svgElement.querySelectorAll('text, tspan');
+  const computedStyles = [];
+  for (const el of liveTextEls) {
+    const cs = window.getComputedStyle(el);
+    computedStyles.push({
+      fontFamily: cs.fontFamily,
+      fontSize: cs.fontSize,
+      fontWeight: cs.fontWeight,
+      fontStyle: cs.fontStyle,
+      letterSpacing: cs.letterSpacing,
+      textTransform: cs.textTransform,
+    });
+  }
+
   const exportSvg = svgElement.cloneNode(true);
   const { viewBox } = getSvgMetrics(svgElement);
 
@@ -201,6 +271,36 @@ function makeExportSvg(svgElement, width, height) {
   exportSvg.setAttribute('height', String(height ?? 1200));
   exportSvg.removeAttribute('class');
   exportSvg.removeAttribute('style');
+
+  // Inline computed font styles as SVG attributes for standalone rendering
+  const clonedTextEls = exportSvg.querySelectorAll('text, tspan');
+  for (let i = 0; i < clonedTextEls.length && i < computedStyles.length; i++) {
+    const el = clonedTextEls[i];
+    const s = computedStyles[i];
+    el.setAttribute('font-family', s.fontFamily);
+    el.setAttribute('font-size', s.fontSize);
+    el.setAttribute('font-weight', s.fontWeight);
+    if (s.fontStyle && s.fontStyle !== 'normal') {
+      el.setAttribute('font-style', s.fontStyle);
+    }
+    if (s.letterSpacing && s.letterSpacing !== 'normal' && s.letterSpacing !== '0px') {
+      el.setAttribute('letter-spacing', s.letterSpacing);
+    }
+    // Apply text-transform to content for standalone SVG viewers
+    if (s.textTransform && s.textTransform !== 'none') {
+      for (const node of el.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          if (s.textTransform === 'uppercase') {
+            node.textContent = node.textContent.toUpperCase();
+          } else if (s.textTransform === 'lowercase') {
+            node.textContent = node.textContent.toLowerCase();
+          } else if (s.textTransform === 'capitalize') {
+            node.textContent = node.textContent.replace(/\b\w/g, (c) => c.toUpperCase());
+          }
+        }
+      }
+    }
+  }
 
   return exportSvg;
 }

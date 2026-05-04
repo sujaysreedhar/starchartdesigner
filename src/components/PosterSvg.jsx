@@ -136,7 +136,9 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
             <stop offset="100%" stopColor={theme.background} stopOpacity="0.6" />
           </radialGradient>
         </defs>
-        <style>{`
+        <style dangerouslySetInnerHTML={{ __html: `
+          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Dancing+Script:wght@400;700&family=Montserrat:wght@300;400;700&family=Outfit:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
+
           .posterTitleSvg {
             font-family: ${ts.title.font || "'Brittany Signature', 'Great Vibes', cursive"};
             font-size: ${ts.title.size}px;
@@ -158,7 +160,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
             letter-spacing: 0.08em;
             text-transform: ${ts.meta.transform || 'uppercase'};
           }
-        `}</style>
+        `}} />
 
         <rect x="0" y="0" width="900" height={height} fill={theme.background} />
         {poster.backgroundImage && (
@@ -176,17 +178,19 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
         <g transform={`translate(0, ${cyOffset})`}>
           {mapDesigns.map((d) => (
             <g key={d.id}>
-              <g clipPath={`url(#${gradientId}-shape-${d.id})`}>
-                <defs>
-                  <clipPath id={`${gradientId}-shape-${d.id}`} clipPathUnits="userSpaceOnUse">
-                    <circle cx={d.x} cy={d.y} r={d.radius} />
-                  </clipPath>
-                </defs>
+              <g clipPath={poster.layout === 'double' ? `url(#${gradientId}-shape-${d.id})` : `url(#${gradientId}-shape)`}>
+                {poster.layout === 'double' ? (
+                  <defs>
+                    <clipPath id={`${gradientId}-shape-${d.id}`} clipPathUnits="userSpaceOnUse">
+                      <circle cx={d.x} cy={d.y} r={d.radius} />
+                    </clipPath>
+                  </defs>
+                ) : null}
                 <rect
-                  x={d.x - d.radius}
-                  y={d.y - d.radius}
-                  width={d.radius * 2}
-                  height={d.radius * 2}
+                  x={poster.layout === 'double' ? d.x - d.radius : (shape.bounds?.x ?? d.x - d.radius)}
+                  y={poster.layout === 'double' ? d.y - d.radius : (shape.bounds?.y ?? d.y - d.radius)}
+                  width={poster.layout === 'double' ? d.radius * 2 : (shape.bounds?.width ?? d.radius * 2)}
+                  height={poster.layout === 'double' ? d.radius * 2 : (shape.bounds?.height ?? d.radius * 2)}
                   fill={`url(#${gradientId}-sky)`}
                 />
                 {poster.chartBackgroundImage && (
@@ -211,7 +215,11 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
                   showConstellations={d.showConstellations}
                   showMilkyWay={d.showMilkyWay}
                   showMoon={d.showMoon}
+                  showMoonLabel={poster.showMoonLabel ?? true}
                   showPlanets={d.showPlanets}
+                  showPlanetLabels={poster.showPlanetLabels ?? true}
+                  showConstellationLabels={poster.showConstellationLabels ?? true}
+                  showStarLabels={poster.showStarLabels ?? false}
                   showGrid={d.showGrid}
                   gridOpacity={d.gridOpacity}
                   gridColor={d.gridColor}
@@ -221,12 +229,21 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
                 />
                 <circle cx={d.x} cy={d.y} r={d.radius} fill={`url(#${gradientId}-horizon)`} pointerEvents="none" />
               </g>
-              <circle cx={d.x} cy={d.y} r={d.radius} fill="none" stroke={theme.borderColor} strokeWidth="2" />
-              {poster.layout === 'double' && (
-                <g transform={`translate(${d.x}, ${d.y + d.radius + 30})`} className="posterMetaSvg" fill={theme.primaryText}>
-                  <text textAnchor="middle" fontWeight="bold">{d.location}</text>
-                  <text y="18" textAnchor="middle" fontSize="9">{formatDate(d.date)} | {formatTime(d.time)}</text>
-                </g>
+              {poster.layout === 'double' ? (
+                <>
+                  <circle cx={d.x} cy={d.y} r={d.radius} fill="none" stroke={theme.borderColor} strokeWidth="2" />
+                  <g transform={`translate(${d.x}, ${d.y + d.radius + 30})`} className="posterMetaSvg" fill={theme.primaryText}>
+                    <text textAnchor="middle" fontWeight="bold">{d.location}</text>
+                    <text y="18" textAnchor="middle" fontSize="9">{formatDate(d.date)} | {formatTime(d.time)}</text>
+                  </g>
+                </>
+              ) : (
+                <>
+                  <ShapeOutline shape={shape} theme={theme} />
+                  {(poster.showCompass ?? true) && (
+                    <TechnicalChartFrame shape={shape} theme={theme} chartGlowId={`${gradientId}-chartGlow`} />
+                  )}
+                </>
               )}
             </g>
           ))}
@@ -235,7 +252,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
         <rect x="36" y="36" width="828" height={height - 72} fill="none" stroke={theme.borderColor} strokeWidth="2" />
 
         <text 
-          x={getX(ts.title.align)} 
+          x={getX(ts.title.align) + (ts.title.xOffset || 0)} 
           y={height - 330 + (ts.title.yOffset || 0)} 
           textAnchor={ts.title.align} 
           fill={ts.title.color || theme.primaryText} 
@@ -244,7 +261,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
           {poster.title || 'YOUR TEXT HERE'}
         </text>
         <text 
-          x={getX(ts.subtitle.align)} 
+          x={getX(ts.subtitle.align) + (ts.subtitle.xOffset || 0)} 
           y={height - 290 + (ts.subtitle.yOffset || 0)} 
           textAnchor={ts.subtitle.align} 
           fill={ts.subtitle.color || theme.secondaryText} 
@@ -255,7 +272,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
 
         <g className="posterMetaSvg" fill={theme.primaryText}>
           <text 
-            x={getX(ts.meta.align)} 
+            x={getX(ts.meta.align) + (ts.meta.xOffset || 0)} 
             y={height - 160 + (ts.meta.yOffset || 0)} 
             textAnchor={ts.meta.align}
             fill={ts.meta.color || theme.primaryText}
@@ -263,7 +280,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
             {poster.locationName ? `Stars Over ${poster.locationName}` : 'Stars Over Bombay'}
           </text>
           <text 
-            x={getX(ts.meta.align)} 
+            x={getX(ts.meta.align) + (ts.meta.xOffset || 0)} 
             y={height - 135 + (ts.meta.yOffset || 0)} 
             textAnchor={ts.meta.align}
             fill={ts.meta.color || theme.primaryText}

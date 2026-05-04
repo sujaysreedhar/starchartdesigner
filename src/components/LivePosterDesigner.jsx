@@ -1,5 +1,5 @@
-import { useRef } from 'react';
-import { Sparkles } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Sparkles, SearchPlus, SearchMinus } from 'lucide-react';
 import { posterSizes } from '../data/posterOptions.js';
 import { ExportButtons } from './ExportButtons.jsx';
 import { LocationSearch } from './LocationSearch.jsx';
@@ -10,6 +10,7 @@ import { TextSettingsPopup } from './TextSettingsPopup.jsx';
 
 export function LivePosterDesigner({ poster, setPoster }) {
   const posterSvgRef = useRef(null);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   const updatePoster = (key, value) => {
     setPoster((current) => ({ ...current, [key]: value }));
@@ -127,6 +128,18 @@ export function LivePosterDesigner({ poster, setPoster }) {
             Show constellation lines
           </label>
         </div>
+        {poster.showConstellations && (
+          <div className="checkboxField nestedCheckbox">
+            <label>
+              <input
+                type="checkbox"
+                checked={poster.showConstellationLabels}
+                onChange={(event) => updatePoster('showConstellationLabels', event.target.checked)}
+              />
+              Show constellation names
+            </label>
+          </div>
+        )}
         <div className="checkboxField">
           <label>
             <input
@@ -147,6 +160,18 @@ export function LivePosterDesigner({ poster, setPoster }) {
             Show Moon
           </label>
         </div>
+        {poster.showMoon && (
+          <div className="checkboxField nestedCheckbox">
+            <label>
+              <input
+                type="checkbox"
+                checked={poster.showMoonLabel}
+                onChange={(event) => updatePoster('showMoonLabel', event.target.checked)}
+              />
+              Show moon label
+            </label>
+          </div>
+        )}
         <div className="checkboxField">
           <label>
             <input
@@ -155,6 +180,40 @@ export function LivePosterDesigner({ poster, setPoster }) {
               onChange={(event) => updatePoster('showPlanets', event.target.checked)}
             />
             Show Planets
+          </label>
+        </div>
+        {poster.showPlanets && (
+          <div className="checkboxField nestedCheckbox">
+            <label>
+              <input
+                type="checkbox"
+                checked={poster.showPlanetLabels}
+                onChange={(event) => updatePoster('showPlanetLabels', event.target.checked)}
+              />
+              Show planet names
+            </label>
+          </div>
+        )}
+
+        <div className="checkboxField">
+          <label>
+            <input
+              type="checkbox"
+              checked={poster.showStarLabels}
+              onChange={(event) => updatePoster('showStarLabels', event.target.checked)}
+            />
+            Show star names
+          </label>
+        </div>
+
+        <div className="checkboxField">
+          <label>
+            <input
+              type="checkbox"
+              checked={poster.showCompass ?? true}
+              onChange={(event) => updatePoster('showCompass', event.target.checked)}
+            />
+            Show compass &amp; technical frame
           </label>
         </div>
 
@@ -240,7 +299,7 @@ export function LivePosterDesigner({ poster, setPoster }) {
         )}
 
         <ThemeSelector value={poster.theme} onChange={(theme) => updatePoster('theme', theme)} />
-        
+
         <div className="field">
           <span>Poster Background</span>
           <div className="uploadRow">
@@ -307,9 +366,21 @@ export function LivePosterDesigner({ poster, setPoster }) {
             <h2>Live poster preview</h2>
             <p>{poster.posterSize} SVG art print</p>
           </div>
-          <Sparkles size={22} />
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button 
+              className="zoomToggleButton" 
+              onClick={() => setIsZoomed(!isZoomed)}
+              title={isZoomed ? "Actual Size" : "Zoom In"}
+            >
+              {isZoomed ? <SearchMinus size={20} /> : <SearchPlus size={20} />}
+              <span>{isZoomed ? 'Reset Zoom' : 'Zoom In'}</span>
+            </button>
+            <Sparkles size={22} />
+          </div>
         </div>
-        <PosterSvg ref={posterSvgRef} poster={poster} />
+        <div className={`posterContainer ${isZoomed ? 'zoomed' : ''}`}>
+          <PosterSvg ref={posterSvgRef} poster={poster} />
+        </div>
         <TextSettingsPopup poster={poster} onUpdate={updatePoster} />
       </div>
     </section>

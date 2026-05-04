@@ -29,7 +29,11 @@ export function StarMap({
   showConstellations = true,
   showMilkyWay = true,
   showMoon = true,
+  showMoonLabel = true,
   showPlanets = true,
+  showPlanetLabels = true,
+  showConstellationLabels = true,
+  showStarLabels = false,
   showGrid = false,
   gridOpacity = 0.2,
   gridColor = '',
@@ -208,17 +212,19 @@ export function StarMap({
           <g key={p.name} transform={`translate(${p.pos.x}, ${p.pos.y})`}>
             <circle r="4.5" fill={theme.starColor} opacity="0.9" filter={`url(#${starGlowId})`} />
             <circle r="2.5" fill={theme.accentColor} />
-            <text 
-              y="-10" 
-              textAnchor="middle" 
-              fill={theme.starColor} 
-              fontSize="9" 
-              fontWeight="bold" 
-              opacity="0.8"
-              style={{ pointerEvents: 'none', userSelect: 'none' }}
-            >
-              {p.name.toUpperCase()}
-            </text>
+            {showPlanetLabels && (
+              <text 
+                y="-10" 
+                textAnchor="middle" 
+                fill={theme.starColor} 
+                fontSize="9" 
+                fontWeight="bold" 
+                opacity="0.8"
+                style={{ pointerEvents: 'none', userSelect: 'none' }}
+              >
+                {p.name.toUpperCase()}
+              </text>
+            )}
           </g>
         )
       ))}
@@ -238,16 +244,18 @@ export function StarMap({
                opacity="0.6" 
              />
           )}
-          <text 
-            y="-14" 
-            textAnchor="middle" 
-            fill={theme.starColor} 
-            fontSize="10" 
-            fontWeight="bold"
-            style={{ pointerEvents: 'none', userSelect: 'none' }}
-          >
-            MOON
-          </text>
+          {showMoonLabel && (
+            <text 
+              y="-14" 
+              textAnchor="middle" 
+              fill={theme.starColor} 
+              fontSize="10" 
+              fontWeight="bold"
+              style={{ pointerEvents: 'none', userSelect: 'none' }}
+            >
+              MOON
+            </text>
+          )}
         </g>
       )}
 
@@ -277,7 +285,7 @@ export function StarMap({
               opacity="0.4"
             />
           ))}
-          {constellationLabels.map((label) => (
+          {showConstellationLabels && constellationLabels.map((label) => (
             <text
               key={label.key}
               x={label.x}
@@ -307,6 +315,20 @@ export function StarMap({
           >
             <title>{`${star.name}, magnitude ${star.mag}, altitude ${star.altitude.toFixed(1)}°`}</title>
           </circle>
+        ))}
+        {showStarLabels && visibleStars.filter(s => s.mag < 2.5 && s.name).map((star) => (
+          <text
+            key={`${star.id || star.name}-name`}
+            x={star.x}
+            y={star.y + star.size + 8}
+            fill={theme.starColor}
+            fontSize="7"
+            textAnchor="middle"
+            opacity="0.6"
+            style={{ pointerEvents: 'none', userSelect: 'none' }}
+          >
+            {star.name}
+          </text>
         ))}
       </g>
     </g>

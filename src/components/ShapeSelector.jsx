@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useId } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { starMapShapes } from '../data/posterOptions.js';
 
@@ -26,6 +26,7 @@ const SHAPE_GROUPS = [
 
 export function ShapeSelector({ value, onChange }) {
   const [openGroup, setOpenGroup] = useState('Classic');
+  const baseId = useId().replaceAll(':', '');
 
   const toggleGroup = (label) => {
     setOpenGroup(openGroup === label ? null : label);
@@ -65,8 +66,9 @@ export function ShapeSelector({ value, onChange }) {
                       onClick={() => onChange(key)}
                       title={shape.label}
                       aria-pressed={value === key}
+                      style={{ position: 'relative', zIndex: 10, cursor: 'pointer' }}
                     >
-                      <ShapeIcon kind={shape.kind} isActive={value === key} />
+                      <ShapeIcon kind={shape.kind} isActive={value === key} baseId={`${baseId}-${key}`} />
                       <span>{shape.label}</span>
                     </button>
                   );
@@ -84,20 +86,21 @@ export function ShapeSelector({ value, onChange }) {
  * Mini poster preview icon — dark sky with tiny star dots inside the shape,
  * so each button instantly communicates what the chart area will look like.
  */
-function ShapeIcon({ kind, isActive }) {
+function ShapeIcon({ kind, isActive, baseId }) {
   const starDots = getMiniStarDots(kind);
+  const clipId = `clip-${kind}-${baseId}`;
 
   return (
     <svg className="shapeIcon" viewBox="0 0 56 56" aria-hidden="true">
       {/* Sky fill clipped to shape */}
       <defs>
-        <clipPath id={`clip-${kind}`}>
+        <clipPath id={clipId}>
           <ShapeClipSmall kind={kind} />
         </clipPath>
       </defs>
 
       {/* Sky background */}
-      <g clipPath={`url(#clip-${kind})`}>
+      <g clipPath={`url(#${clipId})`}>
         <rect x="0" y="0" width="56" height="56" fill="#0d1a2e" />
         {/* Subtle radial glow center */}
         <circle cx="28" cy="28" r="20" fill="url(#skyGlow)" opacity="0.6" />

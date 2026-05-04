@@ -99,13 +99,24 @@ export function TextSettingsPopup({ poster, onUpdate }) {
         </div>
 
         <div className="settingGroup">
-          <label>Vertical Position ({current.yOffset}px)</label>
+          <label>Vertical Position ({current.yOffset || 0}px)</label>
           <input
             type="range"
             min="-200"
             max="200"
             value={current.yOffset || 0}
             onChange={(e) => updateTextSetting(activeTab, 'yOffset', parseInt(e.target.value))}
+          />
+        </div>
+
+        <div className="settingGroup">
+          <label>Horizontal Position ({current.xOffset || 0}px)</label>
+          <input
+            type="range"
+            min="-300"
+            max="300"
+            value={current.xOffset || 0}
+            onChange={(e) => updateTextSetting(activeTab, 'xOffset', parseInt(e.target.value))}
           />
         </div>
 
@@ -188,6 +199,25 @@ export function TextSettingsPopup({ poster, onUpdate }) {
             </button>
           </div>
         </div>
+
+        <div className="divider" />
+        
+        <button 
+          className="resetFullSectionButton"
+          onClick={() => {
+            const defaults = {
+              title: { size: 82, color: '', font: 'Brittany Signature', align: 'middle', yOffset: 0, transform: 'none', xOffset: 0 },
+              subtitle: { size: 13, color: '', font: '', align: 'middle', yOffset: 0, transform: 'uppercase', xOffset: 0 },
+              meta: { size: 10.5, color: '', font: '', align: 'middle', yOffset: 0, transform: 'uppercase', xOffset: 0 },
+            };
+            onUpdate('textSettings', {
+              ...poster.textSettings,
+              [activeTab]: defaults[activeTab]
+            });
+          }}
+        >
+          Reset {activeTab} to Default
+        </button>
       </div>
     </div>
   );

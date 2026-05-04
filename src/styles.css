@@ -172,15 +172,19 @@ button:disabled {
 
 .designerPage {
   display: grid;
-  grid-template-columns: 390px minmax(0, 1fr);
-  min-height: calc(100vh - 72px);
+  grid-template-columns: 410px minmax(0, 1fr);
+  height: calc(100vh - 72px);
+  overflow: hidden;
 }
 
 .settingsPanel {
   border-right: 1px solid #e7e4df;
-  padding: 28px;
+  padding: 28px 28px 48px;
   background: #fbfaf8;
+  height: 100%;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d8d2ca transparent;
 }
 
 .panelHeader {
@@ -661,12 +665,15 @@ button:disabled {
 }
 
 .livePreview {
-  padding: 28px clamp(24px, 5vw, 72px);
-  background: #ffffff;
+  padding: 28px clamp(24px, 5vw, 72px) 64px;
+  background: #f1ede8;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 24px;
+  height: 100%;
+  overflow-y: auto;
+  position: relative;
 }
 
 .previewHeader {
@@ -1157,3 +1164,69 @@ button:disabled {
 }
 
 
+
+.nestedCheckbox {
+  margin-left: 26px;
+  margin-top: -6px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.nestedCheckbox label {
+  font-size: 0.82rem;
+}
+
+/* Zoom and Typography Reset Styles */
+.zoomToggleButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #ffffff;
+  border: 1px solid #d8d2ca;
+  border-radius: 20px;
+  color: #171717;
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.zoomToggleButton:hover {
+  border-color: #b27a46;
+  color: #b27a46;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+.posterContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  transition: transform 0.3s ease;
+  transform-origin: top center;
+}
+
+.posterContainer.zoomed {
+  transform: scale(1.6);
+  margin-bottom: 200px; /* Space for the zoomed content */
+}
+
+.resetFullSectionButton {
+  width: 100%;
+  padding: 10px;
+  margin-top: 16px;
+  background: #fdf2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+  color: #b91c1c;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.resetFullSectionButton:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}

@@ -21,16 +21,16 @@ import { PosterSvg } from './components/PosterSvg.jsx';
 import './styles.css';
 
 const defaultPoster = {
-  title: 'The Night We Met',
-  subtitle: 'A sky written just for us',
-  date: '2026-05-03',
-  time: '21:30',
-  locationName: 'Jaipur, India',
-  locationDisplayName: 'Jaipur, Rajasthan, India',
-  locationState: 'Rajasthan',
+  title: 'Stars Over Bengaluru',
+  subtitle: 'May 18, 2001',
+  date: '2001-05-18',
+  time: '10:30',
+  locationName: 'Bengaluru',
+  locationDisplayName: 'Bengaluru, Karnataka, India',
+  locationState: 'Karnataka',
   locationCountry: 'India',
-  latitude: '26.9124',
-  longitude: '75.7873',
+  latitude: '12.9716',
+  longitude: '77.5946',
 
   // Map 2 (for Double Layout)
   date2: '2026-06-15',
@@ -44,7 +44,12 @@ const defaultPoster = {
   starMapShape: 'circle',
   showMilkyWay: true,
   showMoon: true,
+  showMoonLabel: true,
   showPlanets: true,
+  showPlanetLabels: true,
+  showConstellationLabels: true,
+  showStarLabels: false,
+  showCompass: true,
   showGrid: false,
   gridOpacity: 0.2,
   gridColor: '',
@@ -52,9 +57,9 @@ const defaultPoster = {
   backgroundImage: null,
   chartBackgroundImage: null,
   textSettings: {
-    title: { size: 82, color: '', font: 'Brittany Signature', align: 'middle', yOffset: 0 },
-    subtitle: { size: 13, color: '', font: '', align: 'middle', yOffset: 0 },
-    meta: { size: 10.5, color: '', font: '', align: 'middle', yOffset: 0 },
+    title: { size: 82, color: '', font: 'Brittany Signature', align: 'middle', yOffset: 0, transform: 'none' },
+    subtitle: { size: 13, color: '', font: '', align: 'middle', yOffset: 0, transform: 'uppercase' },
+    meta: { size: 10.5, color: '', font: '', align: 'middle', yOffset: 0, transform: 'uppercase' },
   },
 };
 
