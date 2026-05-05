@@ -191,7 +191,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
                   y={poster.layout === 'double' ? d.y - d.radius : (shape.bounds?.y ?? d.y - d.radius)}
                   width={poster.layout === 'double' ? d.radius * 2 : (shape.bounds?.width ?? d.radius * 2)}
                   height={poster.layout === 'double' ? d.radius * 2 : (shape.bounds?.height ?? d.radius * 2)}
-                  fill={`url(#${gradientId}-sky)`}
+                  fill={(poster.showSkyGradient ?? true) ? `url(#${gradientId}-sky)` : 'transparent'}
                 />
                 {poster.chartBackgroundImage && (
                   <image
@@ -227,7 +227,15 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
                   starGlowId={`${gradientId}-starGlow`}
                   theme={theme}
                 />
-                <circle cx={d.x} cy={d.y} r={d.radius} fill={`url(#${gradientId}-horizon)`} pointerEvents="none" />
+                <circle 
+                  className="no-laser" 
+                  cx={d.x} 
+                  cy={d.y} 
+                  r={d.radius} 
+                  fill={`url(#${gradientId}-horizon)`} 
+                  opacity={(poster.showSkyGradient ?? true) ? 1 : 0}
+                  pointerEvents="none" 
+                />
               </g>
               {poster.layout === 'double' ? (
                 <>
@@ -240,8 +248,14 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
               ) : (
                 <>
                   <ShapeOutline shape={shape} theme={theme} />
-                  {(poster.showCompass ?? true) && (
-                    <TechnicalChartFrame shape={shape} theme={theme} chartGlowId={`${gradientId}-chartGlow`} />
+                  {((poster.showCompass ?? true) || (poster.showCompassText ?? true)) && (
+                    <TechnicalChartFrame 
+                      shape={shape} 
+                      theme={theme} 
+                      chartGlowId={`${gradientId}-chartGlow`} 
+                      showOutline={poster.showCompass ?? true}
+                      showText={poster.showCompassText ?? true}
+                    />
                   )}
                 </>
               )}
@@ -293,7 +307,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
   );
 });
 
-function TechnicalChartFrame({ shape, theme, chartGlowId }) {
+function TechnicalChartFrame({ shape, theme, chartGlowId, showOutline = true, showText = true }) {
   if (shape.kind === 'full-poster-background' || shape.radius > 360) {
     return null;
   }
@@ -307,39 +321,47 @@ function TechnicalChartFrame({ shape, theme, chartGlowId }) {
 
     return (
       <g filter={`url(#${chartGlowId})`} opacity="0.95">
-        <circle cx={shape.cx} cy={shape.cy} r={outerRadius} fill="none" stroke={theme.constellationLineColor} strokeWidth="1" />
-        <circle cx={shape.cx} cy={shape.cy} r={innerRadius} fill="none" stroke={theme.constellationLineColor} strokeWidth="0.5" opacity="0.8" />
-        <circle cx={shape.cx} cy={shape.cy} r={outerRadius + 3} fill="none" stroke={theme.constellationLineColor} strokeWidth="2.5" />
-        {ticks.map((angle) => {
-          const radians = degreesToRadians(angle - 90);
-          const isMajor = angle % 10 === 0;
-          const isMedium = angle % 5 === 0 && !isMajor;
-          
-          const tickLength = isMajor ? 8 : isMedium ? 6 : 4;
-          const startRadius = outerRadius - tickLength;
-          
-          const x1 = shape.cx + Math.cos(radians) * startRadius;
-          const y1 = shape.cy + Math.sin(radians) * startRadius;
-          const x2 = shape.cx + Math.cos(radians) * outerRadius;
-          const y2 = shape.cy + Math.sin(radians) * outerRadius;
+        {showOutline && (
+          <>
+            <circle cx={shape.cx} cy={shape.cy} r={outerRadius} fill="none" stroke={theme.constellationLineColor} strokeWidth="1" />
+            <circle cx={shape.cx} cy={shape.cy} r={innerRadius} fill="none" stroke={theme.constellationLineColor} strokeWidth="0.5" opacity="0.8" />
+            <circle cx={shape.cx} cy={shape.cy} r={outerRadius + 3} fill="none" stroke={theme.constellationLineColor} strokeWidth="2.5" />
+            {ticks.map((angle) => {
+              const radians = degreesToRadians(angle - 90);
+              const isMajor = angle % 10 === 0;
+              const isMedium = angle % 5 === 0 && !isMajor;
+              
+              const tickLength = isMajor ? 8 : isMedium ? 6 : 4;
+              const startRadius = outerRadius - tickLength;
+              
+              const x1 = shape.cx + Math.cos(radians) * startRadius;
+              const y1 = shape.cy + Math.sin(radians) * startRadius;
+              const x2 = shape.cx + Math.cos(radians) * outerRadius;
+              const y2 = shape.cy + Math.sin(radians) * outerRadius;
 
-          return (
-            <line
-              key={angle}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke={theme.constellationLineColor}
-              strokeWidth={isMajor ? 1 : isMedium ? 0.8 : 0.4}
-              opacity={isMajor ? 1 : isMedium ? 0.8 : 0.6}
-            />
-          );
-        })}
-        <CompassLabel x={shape.cx} y={shape.cy - outerRadius - 18} label="N" theme={theme} />
-        <CompassLabel x={shape.cx - outerRadius - 24} y={shape.cy + 5} label="E" theme={theme} />
-        <CompassLabel x={shape.cx + outerRadius + 24} y={shape.cy + 5} label="W" theme={theme} />
-        <CompassLabel x={shape.cx} y={shape.cy + outerRadius + 26} label="S" theme={theme} />
+              return (
+                <line
+                  key={angle}
+                  x1={x1}
+                  y1={y1}
+                  x2={x2}
+                  y2={y2}
+                  stroke={theme.constellationLineColor}
+                  strokeWidth={isMajor ? 1 : isMedium ? 0.8 : 0.4}
+                  opacity={isMajor ? 1 : isMedium ? 0.8 : 0.6}
+                />
+              );
+            })}
+          </>
+        )}
+        {showText && (
+          <>
+            <CompassLabel x={shape.cx} y={shape.cy - outerRadius - 18} label="N" theme={theme} />
+            <CompassLabel x={shape.cx - outerRadius - 24} y={shape.cy + 5} label="E" theme={theme} />
+            <CompassLabel x={shape.cx + outerRadius + 24} y={shape.cy + 5} label="W" theme={theme} />
+            <CompassLabel x={shape.cx} y={shape.cy + outerRadius + 26} label="S" theme={theme} />
+          </>
+        )}
       </g>
     );
   }
@@ -358,24 +380,31 @@ function TechnicalChartFrame({ shape, theme, chartGlowId }) {
 
   return (
     <g filter={`url(#${chartGlowId})`} opacity="0.95">
-      {/* Outer framing line */}
-      <g fill="none" stroke={stroke} strokeWidth="1" opacity="0.8" transform={`translate(${cx} ${cy}) scale(1.08) translate(-${cx} -${cy})`}>
-        <ShapeClip shape={shape} />
-      </g>
-      {/* Dashed ticks contour line */}
-      <g fill="none" stroke={stroke} strokeWidth="5" opacity="0.9" strokeDasharray="1 7" transform={`translate(${cx} ${cy}) scale(1.05) translate(-${cx} -${cy})`}>
-        <ShapeClip shape={shape} />
-      </g>
-      {/* Inner thin framing line */}
-      <g fill="none" stroke={stroke} strokeWidth="0.5" opacity="0.8" transform={`translate(${cx} ${cy}) scale(1.02) translate(-${cx} -${cy})`}>
-        <ShapeClip shape={shape} />
-      </g>
-      
-      {/* Compass markers positioned around the shape's bounding box */}
-      <CompassLabel x={cx} y={N_y} label="N" theme={theme} />
-      <CompassLabel x={E_x} y={cy + 4} label="E" theme={theme} />
-      <CompassLabel x={W_x} y={cy + 4} label="W" theme={theme} />
-      <CompassLabel x={cx} y={S_y} label="S" theme={theme} />
+      {showOutline && (
+        <>
+          {/* Outer framing line */}
+          <g fill="none" stroke={stroke} strokeWidth="1" opacity="0.8" transform={`translate(${cx} ${cy}) scale(1.08) translate(-${cx} -${cy})`}>
+            <ShapeClip shape={shape} />
+          </g>
+          {/* Dashed ticks contour line */}
+          <g fill="none" stroke={stroke} strokeWidth="5" opacity="0.9" strokeDasharray="1 7" transform={`translate(${cx} ${cy}) scale(1.05) translate(-${cx} -${cy})`}>
+            <ShapeClip shape={shape} />
+          </g>
+          {/* Inner thin framing line */}
+          <g fill="none" stroke={stroke} strokeWidth="0.5" opacity="0.8" transform={`translate(${cx} ${cy}) scale(1.02) translate(-${cx} -${cy})`}>
+            <ShapeClip shape={shape} />
+          </g>
+        </>
+      )}
+      {showText && (
+        <>
+          {/* Compass markers positioned around the shape's bounding box */}
+          <CompassLabel x={cx} y={N_y} label="N" theme={theme} />
+          <CompassLabel x={E_x} y={cy + 4} label="E" theme={theme} />
+          <CompassLabel x={W_x} y={cy + 4} label="W" theme={theme} />
+          <CompassLabel x={cx} y={S_y} label="S" theme={theme} />
+        </>
+      )}
     </g>
   );
 }

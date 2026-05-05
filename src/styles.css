@@ -3,7 +3,7 @@
 @font-face {
   font-family: 'Brittany Signature';
   src: url('/fonts/BrittanySignature.ttf') format('truetype'),
-       url('/fonts/BrittanySignature.woff2') format('woff2');
+    url('/fonts/BrittanySignature.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
 }
@@ -519,7 +519,7 @@ button:disabled {
   margin: 4px 0 20px;
 }
 
-.themeControl > span {
+.themeControl>span {
   color: #4b4640;
   font-size: 0.86rem;
   font-weight: 760;
@@ -885,6 +885,7 @@ button:disabled {
 }
 
 @media (max-width: 560px) {
+
   .homeCopy h1,
   .previewIntro h1 {
     font-size: 2.6rem;
@@ -935,7 +936,7 @@ button:disabled {
   display: flex;
   align-items: center;
   gap: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   font-weight: 600;
   color: #171717;
   transition: all 0.2s ease;
@@ -945,18 +946,18 @@ button:disabled {
 .settingsToggleButton:hover {
   background: #fcfbf9;
   transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 .textSettingsPopup {
-  position: absolute;
+  position: fixed;
   top: 80px;
   right: 20px;
   width: 280px;
   background: white;
   border: 1px solid #e7e4df;
   border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
   z-index: 30;
   display: flex;
   flex-direction: column;
@@ -965,8 +966,15 @@ button:disabled {
 }
 
 @keyframes slideIn {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .popupHeader {
@@ -1092,7 +1100,7 @@ button:disabled {
 .alignButtons button.active {
   background: white;
   color: #171717;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .caseButtons {
@@ -1120,7 +1128,7 @@ button:disabled {
 .caseButtons button.active {
   background: white;
   color: #171717;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .themeGrid {
@@ -1190,13 +1198,13 @@ button:disabled {
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
 }
 
 .zoomToggleButton:hover {
   border-color: #b27a46;
   color: #b27a46;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
 }
 
 .posterContainer {
@@ -1209,7 +1217,8 @@ button:disabled {
 
 .posterContainer.zoomed {
   transform: scale(1.6);
-  margin-bottom: 200px; /* Space for the zoomed content */
+  margin-bottom: 200px;
+  /* Space for the zoomed content */
 }
 
 .resetFullSectionButton {
@@ -1229,4 +1238,195 @@ button:disabled {
 .resetFullSectionButton:hover {
   background: #fee2e2;
   border-color: #fca5a5;
+}
+
+.saveSection {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e7e4df;
+}
+
+.saveSection h3 {
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+}
+
+.saveInputRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.saveInputRow input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #d8d2ca;
+  border-radius: 6px;
+  font-size: 0.88rem;
+}
+
+.savedList {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.savedList h4 {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #8a847a;
+  margin-bottom: 4px;
+}
+
+.savedItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #fcfbf9;
+  border: 1px solid #e7e4df;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.savedItem:hover {
+  border-color: #b27a46;
+  background: white;
+}
+
+.savedInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.savedName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #171717;
+}
+
+.savedDate {
+  font-size: 0.72rem;
+  color: #8a847a;
+}
+
+.deleteBtn {
+  background: transparent;
+  border: 0;
+  color: #d1d5db;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.deleteBtn:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+.saveActionButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.saveActionButtons button {
+  flex: 1;
+}
+
+.savedItem.active {
+  border-color: #b27a46;
+  background: #fffefb;
+  box-shadow: 0 0 0 1px #b27a46;
+}
+
+
+.homePage {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 60px 24px;
+}
+
+.homeMain {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  align-items: center;
+  gap: 80px;
+  margin-bottom: 100px;
+}
+
+.homeSavedSection {
+  padding-top: 60px;
+  border-top: 1px solid #e7e4df;
+}
+
+.sectionHeader {
+  margin-bottom: 32px;
+}
+
+.sectionHeader h2 {
+  font-size: 1.75rem;
+  margin: 0;
+}
+
+.sectionHeader p {
+  color: #8a847a;
+  margin-top: 8px;
+}
+
+.homeSavedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 32px;
+}
+
+.homeSavedCard {
+  background: white;
+  border: 1px solid #e7e4df;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.homeSavedCard:hover {
+  transform: translateY(-8px);
+  border-color: #b27a46;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.cardPreview {
+  height: 360px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  background: #fcfbf9;
+  padding: 20px;
+}
+
+.cardPreview .poster {
+  transform: scale(0.35);
+  transform-origin: center center;
+}
+
+.cardInfo {
+  padding: 16px 20px;
+  border-top: 1px solid #f0ede8;
+}
+
+.cardInfo h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cardInfo span {
+  font-size: 0.85rem;
+  color: #8a847a;
+  margin-top: 4px;
+  display: block;
 }

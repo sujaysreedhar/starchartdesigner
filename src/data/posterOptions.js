@@ -266,6 +266,25 @@ export const posterThemes = {
       ring: '#b99045',
     },
   },
+  'plain-white': {
+    key: 'plain-white',
+    label: 'Plain White',
+    background: '#ffffff',
+    primaryText: '#000000',
+    secondaryText: '#333333',
+    starColor: '#000000',
+    constellationLineColor: '#000000',
+    borderColor: '#000000',
+    accentColor: '#000000',
+    fontPairing: modernPairing,
+    sky: {
+      center: '#ffffff',
+      mid: '#ffffff',
+      edge: '#ffffff',
+      grid: 'rgba(0, 0, 0, 0.12)',
+      ring: '#000000',
+    },
+  },
 };
 
 export const starMapShapes = {

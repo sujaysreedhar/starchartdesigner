@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { Sparkles, SearchPlus, SearchMinus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Save, Sparkles, Trash2, ZoomIn, ZoomOut } from 'lucide-react';
 import { posterSizes } from '../data/posterOptions.js';
 import { ExportButtons } from './ExportButtons.jsx';
 import { LocationSearch } from './LocationSearch.jsx';
@@ -8,9 +8,89 @@ import { ShapeSelector } from './ShapeSelector.jsx';
 import { ThemeSelector } from './ThemeSelector.jsx';
 import { TextSettingsPopup } from './TextSettingsPopup.jsx';
 
-export function LivePosterDesigner({ poster, setPoster }) {
+export function LivePosterDesigner({ 
+  poster, 
+  setPoster, 
+  currentDesignId, 
+  setCurrentDesignId, 
+  currentDesignName, 
+  setCurrentDesignName 
+}) {
   const posterSvgRef = useRef(null);
   const [isZoomed, setIsZoomed] = useState(false);
+  const [savedDesigns, setSavedDesigns] = useState([]);
+  const [saveName, setSaveName] = useState(currentDesignName || '');
+
+  useEffect(() => {
+    setSaveName(currentDesignName || '');
+  }, [currentDesignName]);
+
+  useEffect(() => {
+    fetchDesigns();
+  }, []);
+
+  const fetchDesigns = async () => {
+    try {
+      const res = await fetch('http://localhost:3001/api/designs');
+      const data = await res.json();
+      setSavedDesigns(data);
+    } catch (err) {
+      console.error('Could not connect to the save server. Make sure node server.js is running.');
+    }
+  };
+
+  const handleSave = async () => {
+    const name = saveName.trim() || `Design ${new Date().toLocaleTimeString()}`;
+    try {
+      const res = await fetch('http://localhost:3001/api/designs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, poster_data: poster }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setCurrentDesignId(data.id);
+        setCurrentDesignName(name);
+        fetchDesigns();
+      }
+    } catch (err) {
+      alert('Failed to save design. Is the server running?');
+    }
+  };
+
+  const handleUpdate = async () => {
+    const name = saveName.trim() || currentDesignName;
+    try {
+      const res = await fetch(`http://localhost:3001/api/designs/${currentDesignId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, poster_data: poster }),
+      });
+      if (res.ok) {
+        setCurrentDesignName(name);
+        fetchDesigns();
+      }
+    } catch (err) {
+      alert('Failed to update design.');
+    }
+  };
+
+  const handleLoad = (design) => {
+    setPoster(design.poster_data);
+    setCurrentDesignId(design.id);
+    setCurrentDesignName(design.name);
+  };
+
+  const handleDelete = async (e, id) => {
+    e.stopPropagation();
+    if (!confirm('Delete this saved design?')) return;
+    try {
+      await fetch(`http://localhost:3001/api/designs/${id}`, { method: 'DELETE' });
+      fetchDesigns();
+    } catch (err) {
+      alert('Failed to delete design.');
+    }
+  };
 
   const updatePoster = (key, value) => {
     setPoster((current) => ({ ...current, [key]: value }));
@@ -213,7 +293,18 @@ export function LivePosterDesigner({ poster, setPoster }) {
               checked={poster.showCompass ?? true}
               onChange={(event) => updatePoster('showCompass', event.target.checked)}
             />
-            Show compass &amp; technical frame
+            Show compass outline
+          </label>
+        </div>
+
+        <div className="checkboxField">
+          <label>
+            <input
+              type="checkbox"
+              checked={poster.showCompassText ?? true}
+              onChange={(event) => updatePoster('showCompassText', event.target.checked)}
+            />
+            Show direction text (N, E, S, W)
           </label>
         </div>
 
@@ -319,6 +410,21 @@ export function LivePosterDesigner({ poster, setPoster }) {
               <button className="resetButton" onClick={() => updatePoster('backgroundImage', null)}>Remove</button>
             )}
           </div>
+          {poster.backgroundImage && (
+            <div className="checkboxField nestedCheckbox" style={{ marginTop: '8px' }}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={poster.showSkyGradient ?? true}
+                  onChange={(event) => updatePoster('showSkyGradient', event.target.checked)}
+                />
+                Show default sky gradient
+              </label>
+              <p style={{ fontSize: '0.7rem', color: '#8a847a', margin: '4px 0 0 24px' }}>
+                Uncheck to see the background image through the star chart.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="field">
@@ -358,6 +464,56 @@ export function LivePosterDesigner({ poster, setPoster }) {
         </Field>
 
         <ExportButtons poster={poster} svgRef={posterSvgRef} />
+
+        <div className="saveSection">
+          <h3>{currentDesignId ? 'Manage design' : 'Save design'}</h3>
+          <div className="saveInputRow">
+            <input 
+              placeholder="Design name..." 
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+            />
+          </div>
+          <div className="saveActionButtons">
+            {currentDesignId ? (
+              <>
+                <button className="primaryButton" onClick={handleUpdate}>
+                  <Save size={16} />
+                  <span>Update</span>
+                </button>
+                <button className="secondaryButton" onClick={handleSave}>
+                  <span>Save as New</span>
+                </button>
+              </>
+            ) : (
+              <button className="primaryButton wide" onClick={handleSave}>
+                <Save size={16} />
+                <span>Save Design</span>
+              </button>
+            )}
+          </div>
+          
+          {savedDesigns.length > 0 && (
+            <div className="savedList">
+              <h4>Saved designs</h4>
+              {savedDesigns.map((d) => (
+                <div 
+                  key={d.id} 
+                  className={`savedItem ${currentDesignId === d.id ? 'active' : ''}`} 
+                  onClick={() => handleLoad(d)}
+                >
+                  <div className="savedInfo">
+                    <span className="savedName">{d.name}</span>
+                    <span className="savedDate">{new Date(d.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <button className="deleteBtn" onClick={(e) => handleDelete(e, d.id)}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </aside>
 
       <div className="livePreview">
@@ -372,7 +528,7 @@ export function LivePosterDesigner({ poster, setPoster }) {
               onClick={() => setIsZoomed(!isZoomed)}
               title={isZoomed ? "Actual Size" : "Zoom In"}
             >
-              {isZoomed ? <SearchMinus size={20} /> : <SearchPlus size={20} />}
+              {isZoomed ? <ZoomOut size={20} /> : <ZoomIn size={20} />}
               <span>{isZoomed ? 'Reset Zoom' : 'Zoom In'}</span>
             </button>
             <Sparkles size={22} />

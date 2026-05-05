@@ -162,6 +162,11 @@ function buildLaserCutSvg(svgElement) {
     styleEl.textContent = '/* laser cut — styles inlined */';
   }
 
+  // ── Step 4.5: Remove helper elements marked as 'no-laser' ────────────────
+  for (const el of clone.querySelectorAll('.no-laser')) {
+    el.remove();
+  }
+
   // ── Step 5: Apply laser-cut visual treatment ─────────────────────────────
   applyLaserStyles(clone);
 
@@ -359,10 +364,18 @@ function downloadBlob(blob, fileName) {
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
-  document.body.append(link);
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  
+  // Trigger download
   link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  
+  // Clean up with a delay to ensure the browser has initiated the download
+  // with the correct filename and extension.
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 2000);
 }
 
 function getBaseFileName(poster) {

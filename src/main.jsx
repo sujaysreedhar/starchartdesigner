@@ -21,8 +21,8 @@ import { PosterSvg } from './components/PosterSvg.jsx';
 import './styles.css';
 
 const defaultPoster = {
-  title: 'Stars Over Bengaluru',
-  subtitle: 'May 18, 2001',
+  title: 'The day when',
+  subtitle: 'Earth Got the Second Moon',
   date: '2001-05-18',
   time: '10:30',
   locationName: 'Bengaluru',
@@ -42,6 +42,7 @@ const defaultPoster = {
   layout: 'single', // 'single' or 'double'
   theme: 'space-blueprint',
   starMapShape: 'circle',
+  showConstellations: true,
   showMilkyWay: true,
   showMoon: true,
   showMoonLabel: true,
@@ -50,12 +51,14 @@ const defaultPoster = {
   showConstellationLabels: true,
   showStarLabels: false,
   showCompass: true,
+  showCompassText: true,
   showGrid: false,
   gridOpacity: 0.2,
   gridColor: '',
   posterSize: '18 x 24 in',
   backgroundImage: null,
   chartBackgroundImage: null,
+  showSkyGradient: true,
   textSettings: {
     title: { size: 82, color: '', font: 'Brittany Signature', align: 'middle', yOffset: 0, transform: 'none' },
     subtitle: { size: 13, color: '', font: '', align: 'middle', yOffset: 0, transform: 'uppercase' },
@@ -65,6 +68,8 @@ const defaultPoster = {
 
 function App() {
   const [poster, setPoster] = useState(defaultPoster);
+  const [currentDesignId, setCurrentDesignId] = useState(null);
+  const [currentDesignName, setCurrentDesignName] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -101,8 +106,30 @@ function App() {
 
       <main>
         <Routes>
-          <Route path="/" element={<Home poster={poster} />} />
-          <Route path="/designer" element={<LivePosterDesigner poster={poster} setPoster={setPoster} />} />
+          <Route 
+            path="/" 
+            element={
+              <Home 
+                poster={poster} 
+                setPoster={setPoster} 
+                setCurrentDesignId={setCurrentDesignId}
+                setCurrentDesignName={setCurrentDesignName}
+              />
+            } 
+          />
+          <Route 
+            path="/designer" 
+            element={
+              <LivePosterDesigner 
+                poster={poster} 
+                setPoster={setPoster} 
+                currentDesignId={currentDesignId}
+                setCurrentDesignId={setCurrentDesignId}
+                currentDesignName={currentDesignName}
+                setCurrentDesignName={setCurrentDesignName}
+              />
+            } 
+          />
           <Route path="/preview" element={<Preview poster={poster} />} />
         </Routes>
       </main>
@@ -110,27 +137,74 @@ function App() {
   );
 }
 
-function Home({ poster }) {
+function Home({ poster, setPoster, setCurrentDesignId, setCurrentDesignName }) {
+  const [savedDesigns, setSavedDesigns] = React.useState([]);
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    const fetchDesigns = async () => {
+      try {
+        const res = await fetch('http://localhost:3001/api/designs');
+        const data = await res.json();
+        setSavedDesigns(data);
+      } catch (err) {
+        console.error('Failed to fetch designs', err);
+      }
+    };
+    fetchDesigns();
+  }, []);
+
+  const loadDesign = (design) => {
+    setPoster(design.poster_data);
+    setCurrentDesignId(design.id);
+    setCurrentDesignName(design.name);
+    navigate('/designer');
+  };
+
   return (
     <section className="homePage">
-      <div className="homeCopy">
-        <h1>Design a keepsake sky for the moment that changed everything.</h1>
-        <p>
-          Compose a personalized star map poster with date, time, place,
-          coordinates, theme, and print size in one live designer.
-        </p>
-        <div className="homeActions">
-          <Link className="primaryButton" to="/designer">
-            Start designing <ArrowRight size={18} />
-          </Link>
-          <Link className="secondaryButton" to="/preview">
-            View preview <Eye size={18} />
-          </Link>
+      <div className="homeMain">
+        <div className="homeCopy">
+          <h1>Design a keepsake sky for the moment that changed everything.</h1>
+          <p>
+            Compose a personalized star map poster with date, time, place,
+            coordinates, theme, and print size in one live designer.
+          </p>
+          <div className="homeActions">
+            <Link className="primaryButton" to="/designer">
+              Start designing <ArrowRight size={18} />
+            </Link>
+            <Link className="secondaryButton" to="/preview">
+              View preview <Eye size={18} />
+            </Link>
+          </div>
+        </div>
+        <div className="homePoster">
+          <PosterSvg poster={poster} compact />
         </div>
       </div>
-      <div className="homePoster">
-        <PosterSvg poster={poster} compact />
-      </div>
+
+      {savedDesigns.length > 0 && (
+        <div className="homeSavedSection">
+          <div className="sectionHeader">
+            <h2>Your saved collections</h2>
+            <p>Click to open and edit your previous designs.</p>
+          </div>
+          <div className="homeSavedGrid">
+            {savedDesigns.map((d) => (
+              <div key={d.id} className="homeSavedCard" onClick={() => loadDesign(d.poster_data)}>
+                <div className="cardPreview">
+                  <PosterSvg poster={d.poster_data} compact />
+                </div>
+                <div className="cardInfo">
+                  <h3>{d.name}</h3>
+                  <span>{new Date(d.created_at).toLocaleDateString()}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
