@@ -20,6 +20,8 @@ import { ExportButtons } from './components/ExportButtons.jsx';
 import { PosterSvg } from './components/PosterSvg.jsx';
 import './styles.css';
 
+const LOCAL_STORAGE_KEY = 'celeste_studio_current_poster';
+
 const defaultPoster = {
   title: 'The day when',
   subtitle: 'Earth Got the Second Moon',
@@ -67,11 +69,26 @@ const defaultPoster = {
 };
 
 function App() {
-  const [poster, setPoster] = useState(defaultPoster);
+  const [poster, setPoster] = useState(() => {
+    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (err) {
+        return defaultPoster;
+      }
+    }
+    return defaultPoster;
+  });
+
   const [currentDesignId, setCurrentDesignId] = useState(null);
   const [currentDesignName, setCurrentDesignName] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(poster));
+  }, [poster]);
 
   const nav = [
     { id: '/', path: '/', label: 'Home', icon: HomeIcon },

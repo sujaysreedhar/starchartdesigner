@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { FileCode2, FileDown, FileImage, Printer, Scissors } from 'lucide-react';
+import { FileCode2, FileDown, FileImage, Printer, Scissors, Sun } from 'lucide-react';
 import {
+  downloadDirectLightSvg,
   downloadLaserCutSvg,
   downloadPng,
   downloadPrintPdf,
@@ -84,6 +85,23 @@ export function ExportButtons({ poster, svgRef }) {
         </button>
         <p className="laserCutNote">
           Strokes only · no fills · 0.4 pt · ready for laser cutter or plotter
+        </p>
+      </div>
+
+      {/* Direct Light SVG export */}
+      <div className="directLightRow">
+        <button
+          type="button"
+          className="directLightButton exportButton"
+          disabled={Boolean(exporting)}
+          onClick={() => runExport('direct-light', (svg) => downloadDirectLightSvg(svg, poster))}
+          title="Exports a clean single-line SVG for direct light engraving"
+        >
+          <Sun size={17} />
+          {exporting === 'direct-light' ? 'Preparing…' : 'Download Direct Light SVG'}
+        </button>
+        <p className="directLightNote">
+          Single-line strokes · no fills · clean vectors · ready for light engraving
         </p>
       </div>
     </div>

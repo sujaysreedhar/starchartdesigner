@@ -96,7 +96,7 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
       >
         <title id={`${gradientId}-title`}>{poster.title} star map poster</title>
         <desc id={`${gradientId}-desc`}>
-          Personalized star map for {poster.locationName} on {formattedDate} at {formattedTime}.
+          Stars Over {poster.locationName} on {formattedDate} at {formattedTime}.
         </desc>
         <defs>
           <radialGradient id={`${gradientId}-sky`} cx="50%" cy="36%" r="68%">
@@ -136,7 +136,8 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
             <stop offset="100%" stopColor={theme.background} stopOpacity="0.6" />
           </radialGradient>
         </defs>
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style dangerouslySetInnerHTML={{
+          __html: `
           @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Dancing+Script:wght@400;700&family=Montserrat:wght@300;400;700&family=Outfit:wght@300;400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap');
 
           .posterTitleSvg {
@@ -164,13 +165,13 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
 
         <rect x="0" y="0" width="900" height={height} fill={theme.background} />
         {poster.backgroundImage && (
-          <image 
-            href={poster.backgroundImage} 
-            x="0" 
-            y="0" 
-            width="900" 
-            height={height} 
-            preserveAspectRatio="xMidYMid slice" 
+          <image
+            href={poster.backgroundImage}
+            x="0"
+            y="0"
+            width="900"
+            height={height}
+            preserveAspectRatio="xMidYMid slice"
           />
         )}
         {theme.texture === 'marble' && <rect x="0" y="0" width="900" height={height} fill={`url(#${gradientId}-marble)`} />}
@@ -227,14 +228,14 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
                   starGlowId={`${gradientId}-starGlow`}
                   theme={theme}
                 />
-                <circle 
-                  className="no-laser" 
-                  cx={d.x} 
-                  cy={d.y} 
-                  r={d.radius} 
-                  fill={`url(#${gradientId}-horizon)`} 
+                <circle
+                  className="no-laser"
+                  cx={d.x}
+                  cy={d.y}
+                  r={d.radius}
+                  fill={`url(#${gradientId}-horizon)`}
                   opacity={(poster.showSkyGradient ?? true) ? 1 : 0}
-                  pointerEvents="none" 
+                  pointerEvents="none"
                 />
               </g>
               {poster.layout === 'double' ? (
@@ -249,10 +250,10 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
                 <>
                   <ShapeOutline shape={shape} theme={theme} />
                   {((poster.showCompass ?? true) || (poster.showCompassText ?? true)) && (
-                    <TechnicalChartFrame 
-                      shape={shape} 
-                      theme={theme} 
-                      chartGlowId={`${gradientId}-chartGlow`} 
+                    <TechnicalChartFrame
+                      shape={shape}
+                      theme={theme}
+                      chartGlowId={`${gradientId}-chartGlow`}
                       showOutline={poster.showCompass ?? true}
                       showText={poster.showCompassText ?? true}
                     />
@@ -265,37 +266,37 @@ export const PosterSvg = forwardRef(function PosterSvg({ poster, compact = false
 
         <rect x="36" y="36" width="828" height={height - 72} fill="none" stroke={theme.borderColor} strokeWidth="2" />
 
-        <text 
-          x={getX(ts.title.align) + (ts.title.xOffset || 0)} 
-          y={height - 330 + (ts.title.yOffset || 0)} 
-          textAnchor={ts.title.align} 
-          fill={ts.title.color || theme.primaryText} 
+        <text
+          x={getX(ts.title.align) + (ts.title.xOffset || 0)}
+          y={height - 330 + (ts.title.yOffset || 0)}
+          textAnchor={ts.title.align}
+          fill={ts.title.color || theme.primaryText}
           className="posterTitleSvg"
         >
           {poster.title || 'YOUR TEXT HERE'}
         </text>
-        <text 
-          x={getX(ts.subtitle.align) + (ts.subtitle.xOffset || 0)} 
-          y={height - 290 + (ts.subtitle.yOffset || 0)} 
-          textAnchor={ts.subtitle.align} 
-          fill={ts.subtitle.color || theme.secondaryText} 
+        <text
+          x={getX(ts.subtitle.align) + (ts.subtitle.xOffset || 0)}
+          y={height - 290 + (ts.subtitle.yOffset || 0)}
+          textAnchor={ts.subtitle.align}
+          fill={ts.subtitle.color || theme.secondaryText}
           className="posterSubtitleSvg"
         >
           {poster.subtitle || 'SUBTITLE'}
         </text>
 
         <g className="posterMetaSvg" fill={theme.primaryText}>
-          <text 
-            x={getX(ts.meta.align) + (ts.meta.xOffset || 0)} 
-            y={height - 160 + (ts.meta.yOffset || 0)} 
+          <text
+            x={getX(ts.meta.align) + (ts.meta.xOffset || 0)}
+            y={height - 160 + (ts.meta.yOffset || 0)}
             textAnchor={ts.meta.align}
             fill={ts.meta.color || theme.primaryText}
           >
             {poster.locationName ? `Stars Over ${poster.locationName}` : 'Stars Over Bombay'}
           </text>
-          <text 
-            x={getX(ts.meta.align) + (ts.meta.xOffset || 0)} 
-            y={height - 135 + (ts.meta.yOffset || 0)} 
+          <text
+            x={getX(ts.meta.align) + (ts.meta.xOffset || 0)}
+            y={height - 135 + (ts.meta.yOffset || 0)}
             textAnchor={ts.meta.align}
             fill={ts.meta.color || theme.primaryText}
           >
@@ -330,10 +331,10 @@ function TechnicalChartFrame({ shape, theme, chartGlowId, showOutline = true, sh
               const radians = degreesToRadians(angle - 90);
               const isMajor = angle % 10 === 0;
               const isMedium = angle % 5 === 0 && !isMajor;
-              
+
               const tickLength = isMajor ? 8 : isMedium ? 6 : 4;
               const startRadius = outerRadius - tickLength;
-              
+
               const x1 = shape.cx + Math.cos(radians) * startRadius;
               const y1 = shape.cy + Math.sin(radians) * startRadius;
               const x2 = shape.cx + Math.cos(radians) * outerRadius;

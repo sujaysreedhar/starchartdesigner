@@ -1,4 +1,5 @@
 import { getPosterHeight } from '../data/posterOptions.js';
+import { outlineAllText } from './textToPath.js';
 
 const PDF_SIZES = {
   '12 x 18 in': { label: '12x18', width: 864, height: 1296 },
@@ -11,8 +12,8 @@ const PDF_SIZES = {
 // Standard exports
 // ---------------------------------------------------------------------------
 
-export function downloadSvg(svgElement, poster) {
-  const svgMarkup = serializeSvg(svgElement);
+export async function downloadSvg(svgElement, poster) {
+  const svgMarkup = await serializeSvg(svgElement);
   const blob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
   downloadBlob(blob, `${getBaseFileName(poster)}.svg`);
 }
@@ -21,7 +22,7 @@ export async function downloadPng(svgElement, poster) {
   const exportWidth = 5400;
   const exportHeight = getPosterHeight(poster.posterSize) * 6;
   
-  const svgMarkup = serializeSvg(svgElement, exportWidth, exportHeight);
+  const svgMarkup = await serializeSvg(svgElement, exportWidth, exportHeight);
   const svgBlob = new Blob([svgMarkup], { type: 'image/svg+xml;charset=utf-8' });
   const imageUrl = URL.createObjectURL(svgBlob);
 
@@ -49,7 +50,7 @@ export async function downloadPrintPdf(svgElement, poster) {
 
   const page = PDF_SIZES[poster.posterSize] ?? PDF_SIZES['18 x 24 in'];
   const doc = new jsPDF('p', 'pt', [page.width, page.height]);
-  const exportSvg = makeExportSvg(svgElement);
+  const exportSvg = await makeExportSvg(svgElement);
   const posterBox = getCenteredPosterBox(exportSvg, page);
 
   await doc.svg(exportSvg, {
@@ -60,6 +61,27 @@ export async function downloadPrintPdf(svgElement, poster) {
   });
 
   doc.save(`${getBaseFileName(poster)}-${page.label.toLowerCase()}.pdf`);
+}
+
+// ---------------------------------------------------------------------------
+// Direct Light SVG export
+// ---------------------------------------------------------------------------
+
+/**
+ * Exports a clean, single-stroke SVG for direct light engraving:
+ *  - All fills removed (set to "none") except text elements
+ *  - All gradient and filter <defs> stripped
+ *  - All strokes normalised to #000000 at a uniform 0.5px width
+ *  - Opacity attributes removed
+ *  - Text preserved with black fill
+ *  - White background added
+ *  - NO double-line offset (unlike laser cut)
+ */
+export async function downloadDirectLightSvg(svgElement, poster) {
+  const lightSvg = await buildDirectLightSvg(svgElement, poster);
+  const markup = new XMLSerializer().serializeToString(lightSvg);
+  const blob = new Blob([markup], { type: 'image/svg+xml;charset=utf-8' });
+  downloadBlob(blob, `${getBaseFileName(poster)}-direct-light.svg`);
 }
 
 // ---------------------------------------------------------------------------
@@ -75,14 +97,124 @@ export async function downloadPrintPdf(svgElement, poster) {
  *  - Text preserved for engraving reference
  *  - White background added for preview clarity
  */
-export function downloadLaserCutSvg(svgElement, poster) {
-  const laserSvg = buildLaserCutSvg(svgElement);
+export async function downloadLaserCutSvg(svgElement, poster) {
+  const laserSvg = await buildLaserCutSvg(svgElement, poster);
   const markup = new XMLSerializer().serializeToString(laserSvg);
   const blob = new Blob([markup], { type: 'image/svg+xml;charset=utf-8' });
   downloadBlob(blob, `${getBaseFileName(poster)}-laser-cut.svg`);
 }
 
-function buildLaserCutSvg(svgElement) {
+async function buildDirectLightSvg(svgElement, poster) {
+  // ── Step 0: Capture computed styles from the LIVE DOM ────────────────────
+  const liveTextEls = svgElement.querySelectorAll('text, tspan');
+  const computedStyles = [];
+  for (const el of liveTextEls) {
+    const cs = window.getComputedStyle(el);
+    computedStyles.push({
+      fontFamily: cs.fontFamily,
+      fontSize: cs.fontSize,
+      fontWeight: cs.fontWeight,
+      fontStyle: cs.fontStyle,
+      letterSpacing: cs.letterSpacing,
+      textTransform: cs.textTransform,
+      textAnchor: el.getAttribute('text-anchor') || '',
+    });
+  }
+
+  // ── Step 1: Clone ────────────────────────────────────────────────────────
+  const clone = svgElement.cloneNode(true);
+  const { viewBox } = getSvgMetrics(svgElement);
+
+  clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+  clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+  clone.setAttribute('viewBox', viewBox);
+  let widthInMm = 457.2;
+  let heightInMm = 609.6;
+  if (poster.posterSize === '12 x 18 in') { widthInMm = 304.8; heightInMm = 457.2; }
+  else if (poster.posterSize === '24 x 36 in') { widthInMm = 609.6; heightInMm = 914.4; }
+  else if (poster.posterSize === 'A2 poster') { widthInMm = 420; heightInMm = 594; }
+
+  clone.setAttribute('width', `${widthInMm}mm`);
+  clone.setAttribute('height', `${heightInMm}mm`);
+  clone.removeAttribute('class');
+  clone.removeAttribute('style');
+
+  // ── Step 2: Inline computed font styles onto cloned text elements ────────
+  const clonedTextEls = clone.querySelectorAll('text, tspan');
+  for (let i = 0; i < clonedTextEls.length && i < computedStyles.length; i++) {
+    const el = clonedTextEls[i];
+    const s = computedStyles[i];
+
+    el.setAttribute('font-family', s.fontFamily);
+    el.setAttribute('font-size', s.fontSize);
+    el.setAttribute('font-weight', s.fontWeight);
+    if (s.fontStyle && s.fontStyle !== 'normal') {
+      el.setAttribute('font-style', s.fontStyle);
+    }
+    if (s.letterSpacing && s.letterSpacing !== 'normal' && s.letterSpacing !== '0px') {
+      el.setAttribute('letter-spacing', s.letterSpacing);
+    }
+    if (s.textAnchor) {
+      el.setAttribute('text-anchor', s.textAnchor);
+    }
+
+    if (s.textTransform && s.textTransform !== 'none') {
+      for (const node of el.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
+          if (s.textTransform === 'uppercase') {
+            node.textContent = node.textContent.toUpperCase();
+          } else if (s.textTransform === 'lowercase') {
+            node.textContent = node.textContent.toLowerCase();
+          } else if (s.textTransform === 'capitalize') {
+            node.textContent = node.textContent.replace(/\b\w/g, (c) => c.toUpperCase());
+          }
+        }
+      }
+    }
+  }
+
+  // ── Step 3: Strip gradient / filter / pattern defs ───────────────────────
+  for (const el of clone.querySelectorAll(
+    'defs > radialGradient, defs > linearGradient, defs > filter, defs > pattern',
+  )) {
+    el.remove();
+  }
+
+  // ── Step 4: Blank the <style> block ─────────────────────────────────────
+  const styleEl = clone.querySelector('style');
+  if (styleEl) {
+    styleEl.textContent = '/* direct light — styles inlined */';
+  }
+
+  // ── Step 4.5: Remove helper elements marked as 'no-laser' ────────────────
+  for (const el of clone.querySelectorAll('.no-laser')) {
+    el.remove();
+  }
+
+  // ── Step 5: Apply laser-cut visual treatment (single-line, no offsets) ───
+  applyLaserStyles(clone);
+
+  // ── Step 6: White background rect ────────────────────────────────────────
+  const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  bg.setAttribute('x', '0');
+  bg.setAttribute('y', '0');
+  bg.setAttribute('width', '900');
+  bg.setAttribute('height', '1200');
+  bg.setAttribute('fill', '#ffffff');
+  bg.setAttribute('stroke', 'none');
+  const defsEl = clone.querySelector('defs');
+  const anchor = defsEl ? defsEl.nextSibling : clone.firstChild;
+  clone.insertBefore(bg, anchor);
+
+  // ── Step 7: Outline text ─────────────────────────────────────────────────
+  await outlineAllText(clone);
+
+  // No double-line offset — direct light uses clean single strokes.
+
+  return clone;
+}
+
+async function buildLaserCutSvg(svgElement, poster) {
   // ── Step 0: Capture computed styles from the LIVE DOM ────────────────────
   // The live SVG has CSS applied via the <style> block, so getComputedStyle
   // returns the actual rendered font-family, font-size, etc.
@@ -108,8 +240,14 @@ function buildLaserCutSvg(svgElement) {
   clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
   clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
   clone.setAttribute('viewBox', viewBox);
-  clone.setAttribute('width', '900');
-  clone.setAttribute('height', '1200');
+  let widthInMm = 457.2; // default 18 inches
+  let heightInMm = 609.6; // default 24 inches
+  if (poster.posterSize === '12 x 18 in') { widthInMm = 304.8; heightInMm = 457.2; }
+  else if (poster.posterSize === '24 x 36 in') { widthInMm = 609.6; heightInMm = 914.4; }
+  else if (poster.posterSize === 'A2 poster') { widthInMm = 420; heightInMm = 594; }
+
+  clone.setAttribute('width', `${widthInMm}mm`);
+  clone.setAttribute('height', `${heightInMm}mm`);
   clone.removeAttribute('class');
   clone.removeAttribute('style');
 
@@ -182,6 +320,234 @@ function buildLaserCutSvg(svgElement) {
   const anchor = defsEl ? defsEl.nextSibling : clone.firstChild;
   clone.insertBefore(bg, anchor);
 
+  // ── Step 7: Outline text (new requirement) ───────────────────────────────
+  await outlineAllText(clone);
+
+  // ── Step 8: Create proportionate double-line for engraving ───────────────
+  // Calculate user-units per mm based on actual poster physical width.
+  const unitsPerMm = 900 / widthInMm;
+  const offset = 0.5 * unitsPerMm; 
+
+  // We only offset vector lines (fill="none" and stroke="#000000").
+  // This prevents duplicating/bloating filled text paths.
+  const elsToDuplicate = Array.from(clone.querySelectorAll('path, line, circle, rect, polygon, polyline, ellipse'));
+  
+  // Build a lookup map of all stars (circles) to shorten constellation lines so they don't enter the stars
+  const circlesMap = new Map();
+  for (const c of clone.querySelectorAll('circle')) {
+    const cx = parseFloat(c.getAttribute('cx') || '0').toFixed(2);
+    const cy = parseFloat(c.getAttribute('cy') || '0').toFixed(2);
+    const r = parseFloat(c.getAttribute('r') || '0');
+    circlesMap.set(`${cx},${cy}`, r);
+  }
+
+  for (const el of elsToDuplicate) {
+    if (el === bg) continue;
+    
+    // Only process pure vector strokes (no fills)
+    if (el.getAttribute('fill') !== 'none' || el.getAttribute('stroke') !== '#000000') {
+      continue;
+    }
+    
+    const tag = el.tagName.toLowerCase();
+    
+    // Closed geometric shapes: keep original (inner) and add an outer shell
+    if (tag === 'circle') {
+      const dupe = el.cloneNode(true);
+      const r = parseFloat(el.getAttribute('r') || '0');
+      dupe.setAttribute('r', String(r + offset));
+      el.parentNode.insertBefore(dupe, el.nextSibling);
+    } else if (tag === 'ellipse') {
+      const dupe = el.cloneNode(true);
+      const rx = parseFloat(el.getAttribute('rx') || '0');
+      const ry = parseFloat(el.getAttribute('ry') || '0');
+      dupe.setAttribute('rx', String(rx + offset));
+      dupe.setAttribute('ry', String(ry + offset));
+      el.parentNode.insertBefore(dupe, el.nextSibling);
+    } else if (tag === 'rect') {
+      const dupe = el.cloneNode(true);
+      const x = parseFloat(el.getAttribute('x') || '0');
+      const y = parseFloat(el.getAttribute('y') || '0');
+      const w = parseFloat(el.getAttribute('width') || '0');
+      const h = parseFloat(el.getAttribute('height') || '0');
+      dupe.setAttribute('x', String(x - offset));
+      dupe.setAttribute('y', String(y - offset));
+      dupe.setAttribute('width', String(w + offset * 2));
+      dupe.setAttribute('height', String(h + offset * 2));
+      el.parentNode.insertBefore(dupe, el.nextSibling);
+    } 
+    // Open lines and paths: remove original (center) and add left/right symmetric lines
+    else if (tag === 'line') {
+      const x1 = parseFloat(el.getAttribute('x1') || '0');
+      const y1 = parseFloat(el.getAttribute('y1') || '0');
+      const x2 = parseFloat(el.getAttribute('x2') || '0');
+      const y2 = parseFloat(el.getAttribute('y2') || '0');
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const len = Math.sqrt(dx * dx + dy * dy);
+      
+      if (len > 0) {
+        const ux = dx / len;
+        const uy = dy / len;
+        const nx = -uy;
+        const ny = ux;
+        
+        const gap = offset;
+        const shiftX = nx * (gap / 2);
+        const shiftY = ny * (gap / 2);
+
+        // Shorten the line so it stops exactly at the outer circle of the star
+        let d1 = 0;
+        const r1 = circlesMap.get(`${x1.toFixed(2)},${y1.toFixed(2)}`);
+        if (r1 !== undefined) {
+          const R1 = r1 + gap; // outer radius
+          if (R1 > gap / 2) d1 = Math.sqrt(R1 * R1 - (gap / 2) * (gap / 2));
+        }
+
+        let d2 = 0;
+        const r2 = circlesMap.get(`${x2.toFixed(2)},${y2.toFixed(2)}`);
+        if (r2 !== undefined) {
+          const R2 = r2 + gap; // outer radius
+          if (R2 > gap / 2) d2 = Math.sqrt(R2 * R2 - (gap / 2) * (gap / 2));
+        }
+
+        if (len > d1 + d2) {
+          const left = el.cloneNode(true);
+          left.setAttribute('x1', String(x1 + shiftX + ux * d1));
+          left.setAttribute('y1', String(y1 + shiftY + uy * d1));
+          left.setAttribute('x2', String(x2 + shiftX - ux * d2));
+          left.setAttribute('y2', String(y2 + shiftY - uy * d2));
+          el.parentNode.insertBefore(left, el.nextSibling);
+
+          const right = el.cloneNode(true);
+          right.setAttribute('x1', String(x1 - shiftX + ux * d1));
+          right.setAttribute('y1', String(y1 - shiftY + uy * d1));
+          right.setAttribute('x2', String(x2 - shiftX - ux * d2));
+          right.setAttribute('y2', String(y2 - shiftY - uy * d2));
+          el.parentNode.insertBefore(right, el.nextSibling);
+        }
+      }
+      el.parentNode.removeChild(el); // Remove original center line
+    } else if (tag === 'polygon' || tag === 'polyline' || tag === 'path') {
+      let isSimplePolyline = false;
+      let d = '';
+      
+      if (tag === 'path') {
+        d = el.getAttribute('d') || '';
+        if (/^[MLZ\d\s.,-]+$/i.test(d)) isSimplePolyline = true;
+      } else {
+        const points = (el.getAttribute('points') || '').trim();
+        if (points) {
+          isSimplePolyline = true;
+          d = 'M ' + points.replace(/[,\s]+/g, ' ').trim().replace(/([0-9.-]+ [0-9.-]+) /g, '$1 L ');
+          if (tag === 'polygon') d += ' Z';
+        }
+      }
+
+      if (isSimplePolyline) {
+        const pts = [];
+        const cmdRegex = /([MLZ])([^MLZ]*)/gi;
+        let match;
+        while ((match = cmdRegex.exec(d)) !== null) {
+          const cmd = match[1].toUpperCase();
+          if (cmd === 'Z') pts.push({ cmd: 'Z' });
+          else {
+            const nums = match[2].trim().split(/[,\s]+/).filter(Boolean).map(parseFloat);
+            if (nums.length >= 2) pts.push({ cmd, x: nums[0], y: nums[1] });
+          }
+        }
+
+        if (pts.length > 1) {
+          const leftPts = [];
+          const rightPts = [];
+          const gap = offset / 2;
+
+          for (let i = 0; i < pts.length; i++) {
+            const p = pts[i];
+            if (p.cmd === 'Z') {
+              leftPts.push(p);
+              rightPts.push(p);
+              continue;
+            }
+
+            let prev = null, next = null;
+            for (let j = i - 1; j >= 0; j--) { if (pts[j].cmd !== 'Z') { prev = pts[j]; break; } }
+            if (!prev && pts[pts.length - 1]?.cmd === 'Z') {
+              for (let j = pts.length - 2; j >= 0; j--) { if (pts[j].cmd !== 'Z') { prev = pts[j]; break; } }
+            }
+
+            for (let j = i + 1; j < pts.length; j++) { if (pts[j].cmd !== 'Z') { next = pts[j]; break; } }
+            if (!next && pts[i + 1]?.cmd === 'Z') {
+              for (let j = 0; j < pts.length; j++) { if (pts[j].cmd === 'M') { next = pts[j]; break; } }
+            }
+
+            let nx = 0, ny = 0;
+            if (prev && next) {
+              const dx1 = p.x - prev.x, dy1 = p.y - prev.y;
+              const len1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+              let nx1 = 0, ny1 = 0;
+              if (len1 > 0) { nx1 = -dy1 / len1; ny1 = dx1 / len1; }
+
+              const dx2 = next.x - p.x, dy2 = next.y - p.y;
+              const len2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+              let nx2 = 0, ny2 = 0;
+              if (len2 > 0) { nx2 = -dy2 / len2; ny2 = dx2 / len2; }
+
+              nx = nx1 + nx2; ny = ny1 + ny2;
+              const nlen = Math.sqrt(nx*nx + ny*ny);
+              if (nlen > 0) { nx /= nlen; ny /= nlen; }
+            } else if (prev) {
+              const dx = p.x - prev.x, dy = p.y - prev.y;
+              const len = Math.sqrt(dx*dx + dy*dy);
+              if (len > 0) { nx = -dy / len; ny = dx / len; }
+            } else if (next) {
+              const dx = next.x - p.x, dy = next.y - p.y;
+              const len = Math.sqrt(dx*dx + dy*dy);
+              if (len > 0) { nx = -dy / len; ny = dx / len; }
+            }
+
+            leftPts.push({ cmd: p.cmd, x: p.x + nx * gap, y: p.y + ny * gap });
+            rightPts.push({ cmd: p.cmd, x: p.x - nx * gap, y: p.y - ny * gap });
+          }
+
+          let dLeft = '', dRight = '';
+          for (const p of leftPts) { dLeft += (p.cmd === 'Z') ? 'Z ' : `${p.cmd} ${p.x.toFixed(3)},${p.y.toFixed(3)} `; }
+          for (const p of rightPts) { dRight += (p.cmd === 'Z') ? 'Z ' : `${p.cmd} ${p.x.toFixed(3)},${p.y.toFixed(3)} `; }
+
+          const leftPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          const rightPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          for (const attr of el.attributes) {
+            if (attr.name !== 'points' && attr.name !== 'd') {
+              leftPath.setAttribute(attr.name, attr.value);
+              rightPath.setAttribute(attr.name, attr.value);
+            }
+          }
+          leftPath.setAttribute('d', dLeft.trim());
+          rightPath.setAttribute('d', dRight.trim());
+          
+          el.parentNode.insertBefore(leftPath, el.nextSibling);
+          el.parentNode.insertBefore(rightPath, el.nextSibling);
+          el.parentNode.removeChild(el);
+          continue;
+        }
+      }
+
+      // Fallback for complex paths with curves (C, Q, A)
+      const dxy = (offset / 2) / Math.sqrt(2);
+      const existing = el.getAttribute('transform') || '';
+      
+      const left = el.cloneNode(true);
+      left.setAttribute('transform', `${existing} translate(${dxy.toFixed(4)}, ${dxy.toFixed(4)})`.trim());
+      el.parentNode.insertBefore(left, el.nextSibling);
+
+      const right = el.cloneNode(true);
+      right.setAttribute('transform', `${existing} translate(${-dxy.toFixed(4)}, ${-dxy.toFixed(4)})`.trim());
+      el.parentNode.insertBefore(right, el.nextSibling);
+      
+      el.parentNode.removeChild(el);
+    }
+  }
+
   return clone;
 }
 
@@ -245,12 +611,12 @@ function applyLaserStyles(svgRoot) {
 // Shared SVG helpers
 // ---------------------------------------------------------------------------
 
-function serializeSvg(svgElement, width, height) {
-  const exportSvg = makeExportSvg(svgElement, width, height);
+async function serializeSvg(svgElement, width, height) {
+  const exportSvg = await makeExportSvg(svgElement, width, height);
   return new XMLSerializer().serializeToString(exportSvg);
 }
 
-function makeExportSvg(svgElement, width, height) {
+async function makeExportSvg(svgElement, width, height) {
   // Capture computed text styles from the live DOM before cloning
   const liveTextEls = svgElement.querySelectorAll('text, tspan');
   const computedStyles = [];
@@ -306,6 +672,9 @@ function makeExportSvg(svgElement, width, height) {
       }
     }
   }
+
+  // ── Step 3: Outline text (Convert <text> to <path>) ─────────────────────
+  await outlineAllText(exportSvg);
 
   return exportSvg;
 }
